@@ -1,4 +1,9 @@
-def help():
+import sys
+
+from loguru import logger
+
+
+def help_str():
     import_str = "import pathlib"
     path_props = [
         'p = pathlib.Path("/etc/a/b/d.json")' "p.name = d.json",
@@ -19,39 +24,49 @@ def help():
     nav_dirs = [
         "[x for x in p.iterdir() if p.is_dir()]",
         'list(p.glob("**/*.py")',
-    ]
-    other = [
         "with p.open() as f: f.readline()",
     ]
     path_mthds = [
-        "cwd()",
-        "home()",
-        "exists(p)",
-        "expanduser()",
-        "is_file()",
-        "is_dir()",
-        "is_symlink()",
-        "mkdir(parents=False, exists_ok=False)",
-        "rename(new_path_obj)",
-        "absolute()",
-        "resolve()",
-        "rglob()",
-        "rmdir()",
-        "touch()",
+        [
+            "cwd()",
+            "home()",
+            "exists(p)",
+            "expanduser()",
+            "is_file()",
+            "is_dir()",
+        ],
+        [
+            "is_symlink()",
+            "mkdir(parents=False, exists_ok=False)",
+            "rename(new_path_obj)",
+        ],
+        [
+            "absolute()",
+            "resolve()",
+            "rglob()",
+            "rmdir()",
+            "touch()",
+        ],
     ]
     all_lines = []
     all_lines.append(import_str)
-    for p in *path_props, *construct_paths, *nav_dirs:
-        all_lines.append(f" - {p}")
-    all_methods = ", ".join(path_mthds)
-    all_lines.append(f"\nMethods: {all_methods}\n")
+    all_lines += [f" - {p}" for p in (*path_props, *construct_paths, *nav_dirs)]
 
-    print("-" * 50)
-    print(":: Useful Standard Lib Methods ::\n")
-    for l in all_lines:
-        print(l)
-    print("-" * 50)
+    all_lines.append("Methods:")
+    for mg in path_mthds:
+        mm = ", ".join(mg)
+        all_lines.append(f"  {mm})")
+
+    logger.info("-" * 50)
+    logger.info(":: Useful Standard Lib Methods ::")
+    logger.info("")
+    for line in all_lines:
+        logger.info(line)
+    logger.info("-" * 50)
+    logger.info("")
 
 
 if __name__ == "__main__":
-    help()
+    logger.remove()
+    logger.add(sys.stdout, format="{time} | {message}", colorize=True)
+    help_str()
