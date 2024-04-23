@@ -1,6 +1,6 @@
 import sys
+import io
 
-from loguru import logger
 
 
 def help_str():
@@ -48,25 +48,20 @@ def help_str():
             "touch()",
         ],
     ]
-    all_lines = []
-    all_lines.append(import_str)
-    all_lines += [f" - {p}" for p in (*path_props, *construct_paths, *nav_dirs)]
-
-    all_lines.append("Methods:")
+    ss = io.StringIO()
+    ss.write("\n\n:: Useful Standard Lib Methods ::\n")
+    ss.write(f'{"-" * 50}\n')
+    ss.write(f'{import_str}\n')
+    for st in [f" - {p}\n" for p in (*path_props, *construct_paths, *nav_dirs)]:
+        ss.write(st)
+    ss.write("Methods:\n")
     for mg in path_mthds:
         mm = ", ".join(mg)
-        all_lines.append(f"  {mm})")
-
-    logger.info("-" * 50)
-    logger.info(":: Useful Standard Lib Methods ::")
-    logger.info("")
-    for line in all_lines:
-        logger.info(line)
-    logger.info("-" * 50)
-    logger.info("")
-
+        ss.write(f"  {mm}\n")
+    return ss.getvalue()
 
 if __name__ == "__main__":
+    from loguru import logger
     logger.remove()
     logger.add(sys.stdout, format="{time} | {message}", colorize=True)
-    help_str()
+    logger.info(help_str())

@@ -1,8 +1,6 @@
-import capsys
-import dr_utils.file_utils as fu
+import dr_util.file_utils as fu
 
 
-def test_help():
-    fu.help()
-    stdout, stderr = capsys.readouterr()
-    assert stdout != ""
+def test_help(capfd):
+    helps = fu.help_str()
+    assert helps != ''
