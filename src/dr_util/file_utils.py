@@ -10,7 +10,6 @@ import logging
 from omegaconf import OmegaConf
 
 
-
 def help_str():
     import_str = "import pathlib"
     path_props = [
@@ -59,7 +58,7 @@ def help_str():
     ss = io.StringIO()
     ss.write("\n\n:: Useful Standard Lib Methods ::\n")
     ss.write(f'{"-" * 50}\n')
-    ss.write(f'{import_str}\n')
+    ss.write(f"{import_str}\n")
     for st in [f" - {p}\n" for p in (*path_props, *construct_paths, *nav_dirs)]:
         ss.write(st)
     ss.write("Methods:\n")
@@ -68,8 +67,10 @@ def help_str():
         ss.write(f"  {mm}\n")
     return ss.getvalue()
 
+
 # ---------------- Untested or documented -------------------- #
 # TODO: Update to use pathlib
+
 
 def load_files(path_list, flatten=True):
     all_file_data = []
@@ -80,6 +81,7 @@ def load_files(path_list, flatten=True):
         else:
             all_file_data.append(file_data)
     return all_file_data
+
 
 def dump_file(data, path, ending=None, verbose=True):
     dump_lambdas = {
@@ -98,6 +100,7 @@ def dump_file(data, path, ending=None, verbose=True):
                 logging.info(f">> Dumped file: {path}")
             return True
     assert False, f">> Can't dump ending: {path}"
+
 
 def load_file(path, ending=None, mmm=None, verbose=True):
     assert os.path.exists(path), f">> Path doesn't exist: {path}"
@@ -118,6 +121,7 @@ def load_file(path, ending=None, mmm=None, verbose=True):
                 logging.info(f">> Loaded file: {path}")
             return data
     assert False, f">> Path exists but can't load ending: {path}"
+
 
 def loadjsonl(filename):
     all_lines = []
@@ -174,8 +178,10 @@ def dumpomega(data, path, verbose=True):
     if verbose:
         logging.info(f">> Dumped OmegaConf: {path}")
 
+
 if __name__ == "__main__":
     from loguru import logger
+
     logger.remove()
     logger.add(sys.stdout, format="{time} | {message}", colorize=True)
     logger.info(help_str())
