@@ -78,6 +78,9 @@ extend-select = [
 ignore = [
     "COM812", # ignoring both based on conflict
     "ISC001",
+    "TD002", # include author name with todo
+    "TD003", # link to issue after todo
+    "FIX002", # throws on all TODOs
 ]
 
 
