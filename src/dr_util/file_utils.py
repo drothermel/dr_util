@@ -1,12 +1,12 @@
-import sys
 import io
-import os
-import jsonlines
 import json
-import pickle
-import numpy as np
-import glob
 import logging
+import pickle
+import sys
+from pathlib import Path
+
+import jsonlines
+import numpy as np
 from omegaconf import OmegaConf
 
 
@@ -72,18 +72,16 @@ def help_str():
 # TODO: Update to use pathlib
 
 
-def load_files(path_list, flatten=True):
+def load_files(path_list):
     all_file_data = []
     for path in path_list:
         file_data = load_file(path)
-        if flatten:
-            all_file_data.extend(file_data)
-        else:
-            all_file_data.append(file_data)
+        all_file_data.append(file_data)
     return all_file_data
 
 
-def dump_file(data, path, ending=None, verbose=True):
+def dump_file(data, path, force_suffix=None, *, verbose=True):
+    pl_path = Path(path)
     dump_lambdas = {
         "json": dumpjson,
         "jsonl": dumpjsonl,
@@ -92,91 +90,90 @@ def dump_file(data, path, ending=None, verbose=True):
         "npy": dumpnpy,
         "yaml": dumpomega,
     }
-    _, pe = get_name_ending_from_path(path)
-    for e, dump_fxn in dump_lambdas.items():
-        if ending == e or (ending is None and pe == e):
-            dump_fxn(data, path)
-            if verbose:
-                logging.info(f">> Dumped file: {path}")
-            return True
-    assert False, f">> Can't dump ending: {path}"
+    suffix = pl_path.suffix if force_suffix is None else force_suffix
+    dump_fxn = dump_lambdas.get(suffix)
+    if dump_fxn is not None:
+        dump_fxn(data, pl_path)
+        if verbose:
+            logging.info(f">> Dumped file: {path}")
+        return True
+    return False
 
 
-def load_file(path, ending=None, mmm=None, verbose=True):
-    assert os.path.exists(path), f">> Path doesn't exist: {path}"
+def load_file(path, force_suffix=None, mmm=None, *, verbose=True):
+    pl_path = Path(path)
+    if not pl_path.exists():
+        logging.warning(f">> Path missing: {path}")
     load_lambdas = {
-        "json": lambda p: json.load(open(p)),
+        "json": lambda plp: json.load(plp.open()),
         "jsonl": loadjsonl,
         "pkl": loadpkl,
-        "txt": lambda p: open(p).read(),
-        "npy": lambda p: np.load(p) if mmm is None else np.load(p, mmap_mode=mmm),
+        "txt": lambda plp: plp.open().read(),
+        "npy": lambda plp: np.load(plp) if mmm is None else np.load(plp, mmap_mode=mmm),
         "yaml": loadomega,
     }
-    data = None
-    _, pe = get_name_ending_from_path(path)
-    for e, load_fxn in load_lambdas.items():
-        if ending == e or (ending is None and pe == e):
-            data = load_fxn(path)
-            if verbose:
-                logging.info(f">> Loaded file: {path}")
-            return data
-    assert False, f">> Path exists but can't load ending: {path}"
+    suffix = pl_path.suffix if force_suffix is None else force_suffix
+    load_fxn = load_lambdas.get(suffix)
+    if load_fxn is not None:
+        data = load_fxn(pl_path)
+        if verbose:
+            logging.info(f">> Loaded file: {path}")
+        return data
+
+    logging.warning(f">> Path exists but can't load ending: {path}")
+    return None
 
 
-def loadjsonl(filename):
-    all_lines = []
-    with jsonlines.open(filename) as reader:
-        for obj in reader:
-            all_lines.append(obj)
-    return all_lines
+def loadjsonl(pl_path):
+    return list(jsonlines.open(pl_path).iter(skip_empty=True))
 
 
-def loadpkl(filename):
-    return pickle.load(open(filename, "rb"))
+def loadpkl(pl_path):
+    return pickle.load(pl_path.open(mode="rb"))
 
 
-def loadomega(filename):
-    return OmegaConf.load(filename)
+def loadomega(pl_path):
+    return OmegaConf.load(pl_path)
 
 
-def dumptxt(data, path, verbose=True):
-    with open(path, "w+") as f:
+def dumptxt(data, pl_path, *, verbose=True):
+    with pl_path.open(mode="w+") as f:
         f.write(data)
     if verbose:
-        logging.info(f">> Dumped txt: {path}")
+        logging.info(f">> Dumped txt: {pl_path}")
 
 
-def dumpjsonl(data, path, verbose=True):
-    with jsonlines.open(path, mode="w") as writer:
+def dumpjsonl(data, pl_path, *, verbose=True):
+    with jsonlines.open(pl_path, mode="w") as writer:
         for line in data:
             writer.write(line)
     if verbose:
-        logging.info(f">> Dumped jsonl: {path}")
+        logging.info(f">> Dumped jsonl: {pl_path}")
 
 
-def dumpjson(data, path, verbose=True):
-    json.dump(data, open(path, "w+"))
+def dumpjson(data, pl_path, *, verbose=True):
+    json.dump(data, pl_path.open(mode="w+"))
     if verbose:
-        logging.info(f">> Dumped json: {path}")
+        logging.info(f">> Dumped json: {pl_path}")
 
 
-def dumppkl(data, path, verbose=True):
-    with open(path, "wb") as handle:
+def dumppkl(data, pl_path, *, verbose=True):
+    with pl_path.open(mode="wb") as handle:
         pickle.dump(data, handle, protocol=pickle.HIGHEST_PROTOCOL)
     if verbose:
-        logging.info(f">> Dumped pkl: {path}")
+        logging.info(f">> Dumped pkl: {pl_path}")
 
 
-def dumpnpy(data, path, verbose=True):
-    np.save(path, data)
+def dumpnpy(data, pl_path, *, verbose=True):
+    np.save(pl_path, data)
     if verbose:
-        logging.info(f">> Dumped npy: {path}")
+        logging.info(f">> Dumped npy: {pl_path}")
 
 
-def dumpomega(data, path, verbose=True):
-    OmegaConf.save(data, f=path)
+def dumpomega(data, pl_path, *, verbose=True):
+    OmegaConf.save(data, f=pl_path)
     if verbose:
-        logging.info(f">> Dumped OmegaConf: {path}")
+        logging.info(f">> Dumped OmegaConf: {pl_path}")
 
 
 if __name__ == "__main__":
