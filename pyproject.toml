@@ -4,6 +4,9 @@ version = "0.1.0"
 description = "Add your description here"
 dependencies = [
     "loguru>=0.7.2",
+    "numpy>=1.26.4",
+    "jsonlines>=4.0.0",
+    "omegaconf>=2.3.0",
 ]
 readme = "README.md"
 requires-python = ">= 3.8"
@@ -75,6 +78,9 @@ extend-select = [
 ignore = [
     "COM812", # ignoring both based on conflict
     "ISC001",
+    "TD002", # include author name with todo
+    "TD003", # link to issue after todo
+    "FIX002", # throws on all TODOs
 ]
 
 

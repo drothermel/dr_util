@@ -8,5 +8,17 @@
 #   with-sources: false
 
 -e file:.
+antlr4-python3-runtime==4.9.3
+    # via omegaconf
+attrs==23.2.0
+    # via jsonlines
+jsonlines==4.0.0
+    # via dr-util
 loguru==0.7.2
     # via dr-util
+numpy==1.26.4
+    # via dr-util
+omegaconf==2.3.0
+    # via dr-util
+pyyaml==6.0.1
+    # via omegaconf
