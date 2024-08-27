@@ -1,5 +1,6 @@
 import dr_util.file_utils as fu
 import numpy as np
+import pytest
 
 # Sample data for different formats
 sample_data = {
@@ -29,7 +30,7 @@ suffix_map = {
 
 
 @pytest.mark.parametrize(
-    "original_format,force_format",
+    ("original_format", "force_format"),
     [
         ("json", "pkl"),
         ("txt", "json"),
@@ -59,7 +60,7 @@ def test_dump_load_with_force_suffix(original_format, force_format, tmp_path):
 
 
 @pytest.mark.parametrize(
-    "original_format,force_format",
+    ("original_format", "force_format"),
     [
         ("json", "pkl"),
         ("txt", "json"),
@@ -75,7 +76,8 @@ def test_nonexistent_file_load_with_force_suffix(
     # Generate a path that does not exist
     test_file = tmp_path / f"nonexistent_file.{original_format}"
 
-    # Attempt to load the nonexistent file with force_suffix, expecting None as return value
+    # Attempt to load the nonexistent file with force_suffix
+    #  expecting None as return value
     assert fu.load_file(test_file, force_suffix=force_format) is None
 
 
@@ -86,19 +88,20 @@ def test_load_files(file_format, tmp_path):
     test_file2 = tmp_path / f"test_file2.{file_format}"
 
     # Dump sample data to both files
-    dump_file(sample_data[file_format], test_file1)
-    dump_file(sample_data[file_format], test_file2)
+    fu.dump_file(sample_data[file_format], test_file1)
+    fu.dump_file(sample_data[file_format], test_file2)
 
     # Load the files using load_files
-    loaded_data = load_files([test_file1, test_file2])
+    files_to_load = [test_file1, test_file2]
+    loaded_data = fu.load_files(files_to_load)
 
     # Verify that the loaded data matches the original data for both files
     if file_format == "npy":
-        assert len(loaded_data) == 2
+        assert len(loaded_data) == len(files_to_load)
         assert np.array_equal(loaded_data[0], sample_data[file_format])
         assert np.array_equal(loaded_data[1], sample_data[file_format])
     else:
-        assert len(loaded_data) == 2
+        assert len(loaded_data) == len(files_to_load)
         assert loaded_data[0] == sample_data[file_format]
         assert loaded_data[1] == sample_data[file_format]
 
@@ -110,17 +113,18 @@ def test_load_files_with_nonexistent_file(file_format, tmp_path):
     nonexistent_file = tmp_path / f"nonexistent_file.{file_format}"
 
     # Dump sample data to the valid file
-    dump_file(sample_data[file_format], test_file1)
+    fu.dump_file(sample_data[file_format], test_file1)
 
     # Load the files including the nonexistent one
-    loaded_data = load_files([test_file1, nonexistent_file])
+    files_to_load = [test_file1, nonexistent_file]
+    loaded_data = fu.load_files(files_to_load)
 
     # Verify the data: valid data should be loaded, None for the nonexistent file
     if file_format == "npy":
-        assert len(loaded_data) == 2
+        assert len(loaded_data) == len(files_to_load)
         assert np.array_equal(loaded_data[0], sample_data[file_format])
         assert loaded_data[1] is None
     else:
-        assert len(loaded_data) == 2
+        assert len(loaded_data) == len(files_to_load)
         assert loaded_data[0] == sample_data[file_format]
         assert loaded_data[1] is None
