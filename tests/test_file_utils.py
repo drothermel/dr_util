@@ -9,7 +9,7 @@ sample_data = {
     "pkl": {"key": "value"},
     "txt": "Hello, World!",
     "npy": np.array([1, 2, 3]),
-    "yaml": {'key': 'value'},
+    "yaml": {"key": "value"},
 }
 
 

@@ -87,7 +87,7 @@ def dump_file(data, path, force_suffix=None, *, verbose=True):
         "yaml": dumpomega,
     }
     suffix = pl_path.suffix if force_suffix is None else force_suffix
-    suffix = suffix.strip('.')
+    suffix = suffix.strip(".")
     dump_fxn = dump_lambdas.get(suffix)
     if dump_fxn is not None:
         dump_fxn(data, pl_path)
@@ -110,16 +110,16 @@ def load_file(path, force_suffix=None, mmm=None, *, verbose=True):
         "yaml": loadomega,
     }
     suffix = pl_path.suffix if force_suffix is None else force_suffix
-    suffix = suffix.strip('.')
+    suffix = suffix.strip(".")
     load_fxn = load_lambdas.get(suffix)
     if load_fxn is not None:
         try:
             data = load_fxn(pl_path)
             if verbose:
                 logging.info(f">> Loaded file: {path}")
-            return data
         except Exception:
-            return None
+            data = None
+        return data
 
     logging.warning(f">> Path exists but can't load ending: {path}")
     return None
