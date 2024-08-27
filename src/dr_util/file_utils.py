@@ -68,10 +68,6 @@ def help_str():
     return ss.getvalue()
 
 
-# ---------------- Untested or documented -------------------- #
-# TODO: Update to use pathlib
-
-
 def load_files(path_list):
     all_file_data = []
     for path in path_list:
