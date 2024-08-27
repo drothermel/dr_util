@@ -9,7 +9,7 @@ sample_data = {
     "pkl": {"key": "value"},
     "txt": "Hello, World!",
     "npy": np.array([1, 2, 3]),
-    "yaml": {"key": "value"},
+    "yaml": {'key': 'value'},
 }
 
 
@@ -18,67 +18,32 @@ def test_help():
     assert helps != ""
 
 
-# Expected file suffixes and corresponding correct loading methods
-suffix_map = {
-    "json": "json",
-    "jsonl": "jsonl",
-    "pkl": "pkl",
-    "txt": "txt",
-    "npy": "npy",
-    "yaml": "yaml",
-}
-
-
-@pytest.mark.parametrize(
-    ("original_format", "force_format"),
-    [
-        ("json", "pkl"),
-        ("txt", "json"),
-        ("yaml", "txt"),
-        ("jsonl", "json"),
-        ("npy", "pkl"),
-        ("pkl", "json"),
-    ],
-)
-def test_dump_load_with_force_suffix(original_format, force_format, tmp_path):
+@pytest.mark.parametrize("file_format", ["json", "jsonl", "pkl", "txt", "npy", "yaml"])
+def test_dump_load_file(file_format, tmp_path):
     # Generate the appropriate path for the test
-    test_file = tmp_path / f"test_file.{original_format}"
+    test_file = tmp_path / f"test_file.{file_format}"
 
-    # Dump the file with the forced suffix
-    assert fu.dump_file(
-        sample_data[original_format], test_file, force_suffix=force_format
-    )
+    # Dump the file
+    assert fu.dump_file(sample_data[file_format], test_file)
 
-    # Load the file with the forced suffix
-    loaded_data = fu.load_file(test_file, force_suffix=force_format)
+    # Load the file
+    loaded_data = fu.load_file(test_file)
 
     # Check if the loaded data matches the original data
-    if force_format == "npy":
-        assert np.array_equal(loaded_data, sample_data[original_format])
+    if file_format == "npy":
+        assert np.array_equal(loaded_data, sample_data[file_format])
     else:
-        assert loaded_data == sample_data[original_format]
+        assert loaded_data == sample_data[file_format]
 
 
-@pytest.mark.parametrize(
-    ("original_format", "force_format"),
-    [
-        ("json", "pkl"),
-        ("txt", "json"),
-        ("yaml", "txt"),
-        ("jsonl", "json"),
-        ("npy", "pkl"),
-        ("pkl", "json"),
-    ],
-)
-def test_nonexistent_file_load_with_force_suffix(
-    original_format, force_format, tmp_path
-):
+@pytest.mark.parametrize("file_format", ["json", "jsonl", "pkl", "txt", "npy", "yaml"])
+def test_nonexistent_file_load(file_format, tmp_path):
     # Generate a path that does not exist
-    test_file = tmp_path / f"nonexistent_file.{original_format}"
+    test_file = tmp_path / f"nonexistent_file.{file_format}"
 
-    # Attempt to load the nonexistent file with force_suffix
-    #  expecting None as return value
-    assert fu.load_file(test_file, force_suffix=force_format) is None
+    # Attempt to load the nonexistent file, expecting None as return value
+    assert fu.load_file(test_file) is None
+
 
 
 @pytest.mark.parametrize("file_format", ["json", "jsonl", "pkl", "txt", "npy", "yaml"])
