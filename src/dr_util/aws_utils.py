@@ -3,11 +3,11 @@ https://github.com/amazon-science/ReFinED/
     src/refined/resource_management/aws.py
 """
 
-import boto3
 import logging
-import os
-
+from pathlib import Path
 from typing import Optional
+
+import boto3
 from botocore.handlers import disable_signing
 
 
@@ -29,7 +29,7 @@ class S3Manager:
         self,
         s3_bucket: str,
         s3_key: str,
-        output_file_path: str,
+        output_file_path_str: str,
     ) -> None:
         """
         Download a file from S3 and store at output_file_path if it has not already
@@ -40,20 +40,21 @@ class S3Manager:
         :param progress_bar: show progress bar
         :raises botocore.exceptions.ClientError when resource does not exist.
         """
+        output_file_path = Path(output_file_path_str)
         s3_obj = self._s3.Object(s3_bucket, s3_key)
-        s3_obj_size = s3_obj.content_length
         s3_last_modified = int(s3_obj.last_modified.strftime("%s"))
         if (
-            os.path.isfile(output_file_path)
-            and int(os.stat(output_file_path).st_mtime) > s3_last_modified
+            output_file_path.is_file()
+            and int(output_file_path.stat().st_mtime) > s3_last_modified
         ):
             self._log.debug(f"File already downloaded: {output_file_path}.")
         else:
             self._log.debug(
-                f"Downloading {output_file_path} file from S3 bucket: {s3_bucket}, key: {s3_key}"
+                f"Downloading {output_file_path} file from"
+                f"S3 bucket: {s3_bucket}, key: {s3_key}"
             )
-            os.makedirs(os.path.dirname(output_file_path), exist_ok=True)
-            s3_obj.download_file(output_file_path)
+            output_file_path.parent.mkdir(parents=True, exist_ok=True)
+            s3_obj.download_file(str(output_file_path))
             self._log.debug("Download complete.")
 
     def upload_bytes(self, bytes_to_upload: bytes, s3_bucket: str, s3_key: str) -> None:
