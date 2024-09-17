@@ -1,7 +1,7 @@
-'''File adapted from ReFinED repo:
+"""File adapted from ReFinED repo:
 https://github.com/amazon-science/ReFinED/
     src/refined/resource_management/aws.py
-'''
+"""
 
 import boto3
 import logging
@@ -22,7 +22,7 @@ class S3Manager:
             self._s3 = boto3_session.resource("s3")
         else:
             self._s3 = boto3.resource("s3")
-        self._s3.meta.client.meta.events.register('choose-signer.s3.*', disable_signing)
+        self._s3.meta.client.meta.events.register("choose-signer.s3.*", disable_signing)
         self._log = logging.getLogger("S3Manager")
 
     def download_file_if_needed(
