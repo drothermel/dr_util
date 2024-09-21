@@ -45,7 +45,6 @@ def test_nonexistent_file_load(file_format, tmp_path):
     assert fu.load_file(test_file) is None
 
 
-
 @pytest.mark.parametrize("file_format", ["json", "jsonl", "pkl", "txt", "npy", "yaml"])
 def test_load_files(file_format, tmp_path):
     # Create multiple test files

@@ -7,6 +7,8 @@ dependencies = [
     "numpy>=1.26.4",
     "jsonlines>=4.0.0",
     "omegaconf>=2.3.0",
+    "boto3>=1.35.20",
+    "hydra-core==1.3",
 ]
 readme = "README.md"
 requires-python = ">= 3.8"
@@ -20,6 +22,9 @@ managed = true
 dev-dependencies = [
     "pytest>=8.1.1",
 ]
+
+[tool.rye.scripts]
+s3man = "python scripts/s3man.py"
 
 [tool.hatch.metadata]
 allow-direct-references = true

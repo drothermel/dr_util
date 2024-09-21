@@ -6,14 +6,27 @@
 #   features: []
 #   all-features: false
 #   with-sources: false
+#   generate-hashes: false
+#   universal: false
 
 -e file:.
 antlr4-python3-runtime==4.9.3
+    # via hydra-core
     # via omegaconf
 attrs==23.2.0
     # via jsonlines
+boto3==1.35.20
+    # via dr-util
+botocore==1.35.20
+    # via boto3
+    # via s3transfer
+hydra-core==1.3.0
+    # via dr-util
 iniconfig==2.0.0
     # via pytest
+jmespath==1.0.1
+    # via boto3
+    # via botocore
 jsonlines==4.0.0
     # via dr-util
 loguru==0.7.2
@@ -22,10 +35,20 @@ numpy==1.26.4
     # via dr-util
 omegaconf==2.3.0
     # via dr-util
+    # via hydra-core
 packaging==24.0
+    # via hydra-core
     # via pytest
 pluggy==1.5.0
     # via pytest
 pytest==8.1.1
+python-dateutil==2.9.0.post0
+    # via botocore
 pyyaml==6.0.1
     # via omegaconf
+s3transfer==0.10.2
+    # via boto3
+six==1.16.0
+    # via python-dateutil
+urllib3==2.2.3
+    # via botocore
