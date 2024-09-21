@@ -33,6 +33,27 @@ rye lint
 rye lint --fix
 ```
 
+## Scripts
 
+### S3Manager
 
+Download files from s3: `rye run s3man`
+
+Config setup:
+```shell
+# conf/s3man_config.yaml
+defaults:
+  source: refined
+
+output:
+  path_base: <my_coding_home>/data/
+  file: refined/wiki_conf.json
+
+# conf/s3man_source/refined.yaml
+bucket: refined.public
+key_path_base: 2022_oct/
+key_name: wikipedia_model/config.json
+```
+
+**Design:** Any new source should setup the `bucket` and `key_path_base` so only `source.key_name` and `ouptut.file` are set via command line.
 
