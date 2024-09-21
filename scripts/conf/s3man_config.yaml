@@ -1,6 +1,9 @@
-source:
-    bucket: refref.public
-    key_path: here_there/
-    key_name: out_path.jjss
-output: out_path.json
+defaults:
+    - s3man_source: refined
+    - _self_
+
+output: 
+    path_base: /Users/daniellerothermel/drotherm/data/
+    file: refined/wiki_conf.json
+    
 

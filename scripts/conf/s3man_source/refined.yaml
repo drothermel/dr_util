@@ -1,0 +1,3 @@
+bucket: refined.public
+key_path_base: 2022_oct/
+key_name: wikipedia_model/config.json
