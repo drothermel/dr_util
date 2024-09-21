@@ -18,12 +18,14 @@ class S3Manager:
         if not set will use default session
         High-level abstractions for working with S3.
         """
+        self._log = logging.getLogger("S3Manager")
         if boto3_session:
             self._s3 = boto3_session.resource("s3")
+            self._log.info(">> Using passed s3 session")
         else:
             self._s3 = boto3.resource("s3")
+            self._log.info(">> Created new s3 session")
         self._s3.meta.client.meta.events.register("choose-signer.s3.*", disable_signing)
-        self._log = logging.getLogger("S3Manager")
 
     def download_file_if_needed(
         self,
@@ -47,15 +49,15 @@ class S3Manager:
             output_file_path.is_file()
             and int(output_file_path.stat().st_mtime) > s3_last_modified
         ):
-            self._log.debug(f"File already downloaded: {output_file_path}.")
+            self._log.info(f">> File already downloaded: {output_file_path}.")
         else:
-            self._log.debug(
-                f"Downloading {output_file_path} file from"
+            self._log.info(
+                f">> Downloading {output_file_path} file from"
                 f"S3 bucket: {s3_bucket}, key: {s3_key}"
             )
             output_file_path.parent.mkdir(parents=True, exist_ok=True)
             s3_obj.download_file(str(output_file_path))
-            self._log.debug("Download complete.")
+            self._log.info(">> Download complete.")
 
     def upload_bytes(self, bytes_to_upload: bytes, s3_bucket: str, s3_key: str) -> None:
         """
@@ -66,3 +68,4 @@ class S3Manager:
         """
         s3_bucket_resource = self._s3.Bucket(s3_bucket)
         s3_bucket_resource.put_object(Key=s3_key, Body=bytes_to_upload)
+        self._log.info(f">> Upload to {s3_bucket} {s3_key} complete.")
