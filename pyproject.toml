@@ -23,6 +23,9 @@ dev-dependencies = [
     "pytest>=8.1.1",
 ]
 
+[tool.rye.scripts]
+s3man = "python scripts/s3man.py"
+
 [tool.hatch.metadata]
 allow-direct-references = true
 

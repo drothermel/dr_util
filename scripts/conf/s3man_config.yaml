@@ -1,0 +1,6 @@
+source:
+    bucket: refref.public
+    key_path: here_there/
+    key_name: out_path.jjss
+output: out_path.json
+
