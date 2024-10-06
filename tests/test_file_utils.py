@@ -14,8 +14,11 @@ sample_data = {
 
 
 def test_help():
-    helps = fu.help_str()
+    helps = fu.fu_help()
     assert helps != ""
+
+    pathlib_helps = fu.pathlib_help()
+    assert pathlib_helps != ""
 
 
 @pytest.mark.parametrize("file_format", ["json", "jsonl", "pkl", "txt", "npy", "yaml"])
