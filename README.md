@@ -33,6 +33,10 @@ rye lint
 rye lint --fix
 ```
 
+## Useful Features
+
+- Roam API SDK + Example Notebook (`notebooks/roam_api.ipynb')
+
 ## Scripts
 
 ### S3Manager
