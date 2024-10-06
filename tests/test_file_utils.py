@@ -14,7 +14,7 @@ sample_data = {
 
 
 def test_help():
-    helps = fu.help()
+    helps = fu.fu_help()
     assert helps != ""
 
     pathlib_helps = fu.pathlib_help()

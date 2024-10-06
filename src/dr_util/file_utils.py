@@ -10,24 +10,33 @@ import numpy as np
 from omegaconf import OmegaConf
 
 
-def help():
+def fu_help():
     buff = io.StringIO()
-    buff.write("\n :: Help for dr_util.file_utils ::\n\n")
+    title_str = ":: Help for dr_util.file_utils ::"
+    block_str = f" {'-'*len(title_str)} \n"
 
-    buff.write(">> For pathlib helpers: fu.pathlib_help()\n\n")
+    buff.write(f"\n{title_str}\n")
+    buff.write(f"{block_str}\n")
+    buff.write(" For pathlib helpers: fu.pathlib_help()\n\n")
+    buff.write(" Main Functions\n")
+    buff.write("  - load_file(path, force_suffix=None, mmm=None, *, verbose=True)\n")
+    buff.write("  - dump_file(data, path, force_suffix=None, verbose=Tue)\n")
+    buff.write("  - load_files(path_list)\n\n")
+    buff.write(" Supported Endings: json, jsonl, pkl, txt, npy, yaml\n")
+    buff.write(f"\n{block_str}")
 
-    buff.write(">> Main Functions\n")
-    buff.write(" - load_file(path, force_suffix=None, mmm=None, *, verbose=True)\n")
-    buff.write(" - dump_file(data, path, force_suffix=None, verbose=Tue)\n")
-    buff.write(" - load_files(path_list)\n\n")
-
-    buff.write(">> Supported Endings: json, jsonl, pkl, txt, npy, yaml\n")
     buff_str = buff.getvalue()
-    print(buff_str)
+    logging.info(buff_str)
     return buff_str
 
 
 def pathlib_help():
+    buff = io.StringIO()
+    title_str = ":: Useful Standard Pathlib Methods ::"
+    block_str = f" {'-'*len(title_str)} \n"
+    buff.write(f"\n{title_str}\n")
+    buff.write(f"{block_str}\n")
+
     import_str = "import pathlib"
     path_props = [
         'p = pathlib.Path("/etc/a/b/d.json")' "p.name = d.json",
@@ -72,17 +81,19 @@ def pathlib_help():
             "touch()",
         ],
     ]
-    ss = io.StringIO()
-    ss.write("\n\n:: Useful Standard Lib Methods ::\n")
-    ss.write(f'{"-" * 50}\n')
-    ss.write(f"{import_str}\n")
-    for st in [f" - {p}\n" for p in (*path_props, *construct_paths, *nav_dirs)]:
-        ss.write(st)
-    ss.write("Methods:\n")
+
+    buff.write(f" {import_str}\n")
+    for st in [f"  - {p}\n" for p in (*path_props, *construct_paths, *nav_dirs)]:
+        buff.write(st)
+    buff.write("\n Methods:\n")
     for mg in path_mthds:
         mm = ", ".join(mg)
-        ss.write(f"  {mm}\n")
-    return ss.getvalue()
+        buff.write(f"   {mm}\n")
+    buff.write(f"\n{block_str}")
+
+    buff_str = buff.getvalue()
+    logging.info(buff_str)
+    return buff_str
 
 
 def load_files(path_list):
@@ -199,4 +210,5 @@ if __name__ == "__main__":
 
     logger.remove()
     logger.add(sys.stdout, format="{time} | {message}", colorize=True)
-    logger.info(help_str())
+    fu_help()
+    pathlib_help()
