@@ -20,12 +20,12 @@ boto3==1.35.20
 botocore==1.35.20
     # via boto3
     # via s3transfer
-hydra-core==1.3.0
-    # via dr-util
 certifi==2024.8.30
     # via requests
 charset-normalizer==2.1.1
     # via requests
+hydra-core==1.3.0
+    # via dr-util
 idna==3.10
     # via requests
 jmespath==1.0.1
