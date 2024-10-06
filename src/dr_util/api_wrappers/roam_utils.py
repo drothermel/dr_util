@@ -1,9 +1,9 @@
 # Copied and adapated from: https://github.com/Roam-Research/backend-sdks/blob/master/python/roam_client/client.py
 
-import requests
-import json
 import re
-from schema import Schema, Or, And, Use, Optional, SchemaError
+
+import requests
+from schema import And, Optional, Or, Schema
 
 
 class RoamBackendClient:
