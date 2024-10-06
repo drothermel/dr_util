@@ -1,23 +1,42 @@
 # Copied and adapated from: https://github.com/Roam-Research/backend-sdks/blob/master/python/roam_client/client.py
 
+import logging
 import re
 
 import requests
 from schema import And, Optional, Or, Schema
 
+HTTP_500_ERROR = 500
+HTTP_400_ERROR = 400
+INVALID_TOK_ERROR = 401
+RETRY_ERROR = 503
 
+
+# Basically ruff wants me to make my own exceptions, do this one day
+# ruff: noqa: TRY002, TRY003
 class RoamBackendClient:
     def __init__(self, token, graph):
         self.__token = token
         self.graph = graph
         self.__cache = {}
 
-    def __make_request(self, path, body, method=None):
+    def _error_message(self, status_code, response_json):
+        if status_code == HTTP_500_ERROR:
+            raise Exception("Error (HTTP 500): " + response_json)
+        if status_code == HTTP_400_ERROR:
+            raise Exception("Error (HTTP 400): " + response_json)
+        if status_code == INVALID_TOK_ERROR:
+            raise Exception("Invalid token or token doesn't have enough privileges.")
+        if status_code == RETRY_ERROR:
+            raise Exception(
+                "Error (HTTP 503): Your graph is not ready yet for a request,"
+                "please retry in a few seconds."
+            )
+        raise Exception("Unknown Error: " + response_json)
+
+    def __make_request(self, path, method=None):
         method = "POST" if method is None else method
-        if self.graph in self.__cache:
-            base_url = self.__cache[self.graph]
-        else:
-            base_url = "https://api.roamresearch.com"
+        base_url = self.__cache.get(self.graph, "https://api.roamresearch.com")
         return (
             base_url + path,
             method,
@@ -39,26 +58,15 @@ class RoamBackendClient:
                 if mtch is None:
                     raise Exception("TODO")
                 peer_n, port = mtch.groups()
-                self.__cache[self.graph] = redirect_url = (
+                # The redirect url
+                self.__cache[self.graph] = (
                     "https://" + peer_n + ".api.roamresearch.com:" + port
                 )
                 return self.call(path, method, body)
-            else:
-                raise Exception("TODO")
+            raise Exception("TODO")
         if not resp.ok:
-            print(resp.status_code)
-            if resp.status_code == 500:
-                raise Exception("Error (HTTP 500): " + str(resp.json()))
-            elif resp.status_code == 400:
-                raise Exception("Error (HTTP 400): " + str(resp.json()))
-            elif resp.status_code == 401:
-                raise Exception(
-                    "Invalid token or token doesn't have enough privileges."
-                )
-            else:
-                raise Exception(
-                    "Error (HTTP 503): Your graph is not ready yet for a request, please retry in a few seconds."
-                )
+            logging.info(resp.status_code)
+            self._error_message(resp.status_code, resp.json())
         return resp
 
 
