@@ -1,8 +1,8 @@
 import logging
-import hydra
-from omegaconf import DictConfig
 
+import hydra
 from dr_util.api_wrappers.aws_utils import S3Manager
+from omegaconf import DictConfig
 
 
 @hydra.main(version_base=None, config_path="conf", config_name="s3man_config")
