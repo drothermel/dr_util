@@ -10,7 +10,24 @@ import numpy as np
 from omegaconf import OmegaConf
 
 
-def help_str():
+def help():
+    buff = io.StringIO()
+    buff.write("\n :: Help for dr_util.file_utils ::\n\n")
+
+    buff.write(">> For pathlib helpers: fu.pathlib_help()\n\n")
+
+    buff.write(">> Main Functions\n")
+    buff.write(" - load_file(path, force_suffix=None, mmm=None, *, verbose=True)\n")
+    buff.write(" - dump_file(data, path, force_suffix=None, verbose=Tue)\n")
+    buff.write(" - load_files(path_list)\n\n")
+
+    buff.write(">> Supported Endings: json, jsonl, pkl, txt, npy, yaml\n")
+    buff_str = buff.getvalue()
+    print(buff_str)
+    return buff_str
+
+
+def pathlib_help():
     import_str = "import pathlib"
     path_props = [
         'p = pathlib.Path("/etc/a/b/d.json")' "p.name = d.json",
