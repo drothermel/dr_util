@@ -4,6 +4,7 @@ from omegaconf import DictConfig
 
 from dr_util.api_wrappers.aws_utils import S3Manager
 
+
 @hydra.main(version_base=None, config_path="conf", config_name="s3man_config")
 def main(cfg: DictConfig) -> None:
     logging.basicConfig(level="DEBUG")
@@ -22,6 +23,6 @@ def main(cfg: DictConfig) -> None:
         output_file_path_str=outpath,
     )
 
+
 if __name__ == "__main__":
     main()
-
