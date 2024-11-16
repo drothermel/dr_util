@@ -1,4 +1,5 @@
 import dr_util.file_utils as fu
+import jsonlines
 import numpy as np
 import pytest
 
@@ -95,3 +96,40 @@ def test_load_files_with_nonexistent_file(file_format, tmp_path):
         assert len(loaded_data) == len(files_to_load)
         assert loaded_data[0] == sample_data[file_format]
         assert loaded_data[1] is None
+
+# Helper function to create a temporary JSONL file
+def create_jsonl_file(path, lines):
+    with jsonlines.open(path, mode="w") as writer:
+        writer.write_all(lines)
+
+def test_jsonl_generator_valid_file(tmp_path):
+    # Temporary JSONL file path
+    jsonl_path = tmp_path / "test.jsonl"
+
+    # Create a JSONL file with test data
+    test_data = [
+        {"name": "Alice", "age": 25},
+        {"name": "Bob", "age": 30},
+        {"name": "Charlie", "age": 35}
+    ]
+
+    create_jsonl_file(jsonl_path, test_data)
+
+    # Call the generator and collect results
+    results = list(fu.jsonl_generator(jsonl_path))
+
+    # Assert the results match the test data
+    assert results == test_data
+
+def test_jsonl_generator_empty_file(tmp_path):
+    # Temporary JSONL file path
+    jsonl_path = tmp_path / "empty.jsonl"
+
+    # Create an empty JSONL file
+    create_jsonl_file(jsonl_path, [])
+
+    # Call the generator and collect results
+    results = list(fu.jsonl_generator(jsonl_path))
+
+    # Assert the results are an empty list
+    assert results == []
