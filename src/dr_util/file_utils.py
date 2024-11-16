@@ -1,3 +1,5 @@
+from typing import Generator
+
 import io
 import json
 import logging
@@ -21,7 +23,8 @@ def fu_help():
     buff.write(" Main Functions\n")
     buff.write("  - load_file(path, force_suffix=None, mmm=None, *, verbose=True)\n")
     buff.write("  - dump_file(data, path, force_suffix=None, verbose=Tue)\n")
-    buff.write("  - load_files(path_list)\n\n")
+    buff.write("  - load_files(path_list)\n")
+    buff.write("  - jsonl_generator(path)\n\n")
     buff.write(" Supported Endings: json, jsonl, pkl, txt, npy, yaml\n")
     buff.write(f"\n{block_str}")
 
@@ -94,6 +97,12 @@ def pathlib_help():
     buff_str = buff.getvalue()
     logging.info(buff_str)
     return buff_str
+
+
+def jsonl_generator(path: str) -> Generator:
+    with jsonlines.open(path) as reader:
+        for line in reader:
+            yield line
 
 
 def load_files(path_list):
