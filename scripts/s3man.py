@@ -18,6 +18,8 @@ Cfg fields you most likely want to modify
   s3man_source.out_dir_name = refined
   output.file_name     = wiki_conf.json
 """
+
+
 @hydra.main(version_base=None, config_path="../configs", config_name="s3man")
 def main(cfg: DictConfig) -> None:
     lu.log_cfg(cfg)
