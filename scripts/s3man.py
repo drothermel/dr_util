@@ -5,7 +5,7 @@ from dr_util.api_wrappers.aws_utils import S3Manager
 from omegaconf import DictConfig
 
 
-@hydra.main(version_base=None, config_path="conf", config_name="s3man_config")
+@hydra.main(version_base=None, config_path="../configs", config_name="s3man_config")
 def main(cfg: DictConfig) -> None:
     logging.basicConfig(level="DEBUG")
 
