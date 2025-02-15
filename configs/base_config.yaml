@@ -1,0 +1,14 @@
+defaults:
+    - _self_
+    - paths: mac
+
+hydra:
+    run:
+        dir: ${paths.run_dir}
+    job_logging:
+        formatters:
+            simple:
+                format: "%(asctime)s - %(message)s"
+                datefmt: "%Y-%m-%d %H:%M:%S"
+
+seed: 42
