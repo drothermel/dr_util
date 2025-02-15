@@ -4,6 +4,7 @@ defaults:
     - _self_
 
 paths:
+    proj_dir_name: s3man
     my_data: ${paths.data}/${s3man_source.out_dir_name}
 
 hydra:
@@ -19,4 +20,3 @@ output:
     file_name: wiki_conf.json
     file: ${paths.my_data}/${output.file_name}
     
-proj_dir_name: s3man
