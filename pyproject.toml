@@ -20,3 +20,63 @@ build-backend = "hatchling.build"
 dev = [
     "ruff>=0.9.6",
 ]
+
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.lint]
+extend-select = [
+    "E",    # pycodestyle
+    "F",    # pyflakes
+    "UP",   # pyupgrade
+    "B",    # flake8-bugbear
+    "I",    # isort
+    "N",    # pep8-naming
+    "UP",   # pyupgrade
+    "A",    # flake8-builtins
+    "FBT",  # flake8-boolean-trap
+    "COM",  # flake8-commas
+    "C4",   # flake8-comprehensions
+    "T10",  # flake8-debugger
+    "EXE",  # flake8-executable
+    "ISC",  # flake8-implicit-str-concat
+    "ICN",  # flake8-import-conventions
+    "LOG",  # flake8-logging
+    "INP",  # flake8-no-pep420
+    "PIE",  # flake8-pie
+    "T20",  # flake8-print
+    "PYI",  # flake8-pyi
+    "PT",   # flake8-pytest-style
+    "Q",    # flake8-quotes
+    "RET",  # flake8-return
+    "SLF",  # flake8-self
+    "SIM",  # flake8-simplify
+    "TID",  # flake8-tidy-imports
+    "INT",  # flake8-gettext
+    "ARG",  # flake8-nused-arguments
+    "PTH",  # flake8-use-pathlib
+    "TD",   # flake8-todos
+    "FIX",  # flake8-fixme
+    "ERA",  # eradicate
+    "PD",   # pandas-vet
+    "PL",   # pylint
+    "TRY",  # tryceratops
+    "FLY",  # flynt
+    "NPY",  # numpy
+    "PERF", # perflint
+    "RUF",  # ruff specific
+    #"D",    # pydocstyle
+    #"TCH",  # flake8-type-checking
+    #"ANN",  # flake8-annotations 
+]
+ignore = [
+    "COM812", # ignoring both based on conflict
+    "ISC001",
+    "TD002", # include author name with todo
+    "TD003", # link to issue after todo
+    "FIX002", # throws on all TODOs
+]
+
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"  # Accepts: "google", "numpy", or "pep257".
