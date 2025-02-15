@@ -1,4 +1,9 @@
 root: /Users/daniellerothermel/drotherm
-data: ${paths.root}/data/dr_util
-logs: ${paths.root}/logs/dr_util
-run_dir: ${paths.logs}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+proj_dir_name:
+data: ${paths.root}/data
+logs: ${paths.root}/logs
+
+my_data: ${paths.data}/${paths.proj_dir_name}
+my_logs: ${paths.logs}/${paths.proj_dir_name}
+
+run_dir: ${paths.my_logs}/${now:%Y-%m-%d}/${now:%H-%M-%S}

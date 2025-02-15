@@ -1,10 +1,9 @@
-from typing import Generator
-
 import io
 import json
 import logging
 import pickle
 import sys
+from collections.abc import Generator
 from pathlib import Path
 
 import jsonlines
@@ -15,7 +14,7 @@ from omegaconf import OmegaConf
 def fu_help():
     buff = io.StringIO()
     title_str = ":: Help for dr_util.file_utils ::"
-    block_str = f" {'-'*len(title_str)} \n"
+    block_str = f" {'-' * len(title_str)} \n"
 
     buff.write(f"\n{title_str}\n")
     buff.write(f"{block_str}\n")
@@ -36,13 +35,13 @@ def fu_help():
 def pathlib_help():
     buff = io.StringIO()
     title_str = ":: Useful Standard Pathlib Methods ::"
-    block_str = f" {'-'*len(title_str)} \n"
+    block_str = f" {'-' * len(title_str)} \n"
     buff.write(f"\n{title_str}\n")
     buff.write(f"{block_str}\n")
 
     import_str = "import pathlib"
     path_props = [
-        'p = pathlib.Path("/etc/a/b/d.json")' "p.name = d.json",
+        'p = pathlib.Path("/etc/a/b/d.json")p.name = d.json',
         "p.suffix = .json",
         "p.parent = b",
         "p.parents = [/etc/a/b, /etc/a, /etc]",
@@ -101,8 +100,7 @@ def pathlib_help():
 
 def jsonl_generator(path: str) -> Generator:
     with jsonlines.open(path) as reader:
-        for line in reader:
-            yield line
+        yield from reader
 
 
 def load_files(path_list):

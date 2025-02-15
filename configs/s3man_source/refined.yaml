@@ -1,3 +1,6 @@
 bucket: refined.public
-key_path_base: 2022_oct/
-key_name: wikipedia_model/config.json
+key: 2022_oct/wikipedia_model/config.json
+
+# Included here because generally sources determine ideal
+# output directory name.
+out_dir_name: refined

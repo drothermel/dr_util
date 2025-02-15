@@ -1,9 +1,11 @@
 defaults:
     - paths: mac
+    - s3man_source: refined
     - _self_
 
 paths:
-    proj_dir_name: dr_util
+    proj_dir_name: s3man
+    my_data: ${paths.data}/${s3man_source.out_dir_name}
 
 hydra:
     run:
@@ -14,4 +16,7 @@ hydra:
                 format: "%(asctime)s - %(message)s"
                 datefmt: "%Y-%m-%d %H:%M:%S"
 
-seed: 42
+output:
+    file_name: wiki_conf.json
+    file: ${paths.my_data}/${output.file_name}
+    
