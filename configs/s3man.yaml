@@ -6,6 +6,15 @@ defaults:
 paths:
     my_data: ${paths.data}/${s3man_source.out_dir_name}
 
+hydra:
+    run:
+        dir: ${paths.run_dir}
+    job_logging:
+        formatters:
+            simple:
+                format: "%(asctime)s - %(message)s"
+                datefmt: "%Y-%m-%d %H:%M:%S"
+
 output:
     file_name: wiki_conf.json
     file: ${paths.my_data}/${output.file_name}
