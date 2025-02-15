@@ -2,9 +2,6 @@ defaults:
     - paths: mac
     - _self_
 
-paths:
-    proj_dir_name: dr_util
-
 hydra:
     run:
         dir: ${paths.run_dir}
@@ -15,3 +12,4 @@ hydra:
                 datefmt: "%Y-%m-%d %H:%M:%S"
 
 seed: 42
+proj_dir_name: dr_util

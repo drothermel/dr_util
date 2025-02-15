@@ -5,4 +5,5 @@ logs: ${paths.root}/logs
 my_data: ${paths.data}/${..proj_dir_name}
 my_logs: ${paths.logs}/${..proj_dir_name}
 timestamp_dirs: ${now:%Y-%m-%d}/${now:%H-%M-%S}
-run_dir: ${paths.my_logs}/${timestamp_dirs}
+
+run_dir: ${paths.my_logs}/${paths.timestamp_dirs}
