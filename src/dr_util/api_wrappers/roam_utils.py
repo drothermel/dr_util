@@ -1,4 +1,5 @@
 # Copied and adapated from: https://github.com/Roam-Research/backend-sdks/blob/master/python/roam_client/client.py
+# Tested manually when added but not yet maintained
 
 import logging
 import re
