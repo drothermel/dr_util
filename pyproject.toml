@@ -23,11 +23,13 @@ dev = [
 
 [tool.ruff]
 line-length = 88
+exclude = ["outputs/*", "notebooks/*"]
 
 [tool.ruff.format]
-exclude = ["outputs/*", "notebooks/*"]
 indent-style = "space"
 quote-style = "double"
+docstring-code-format = true
+docstring-code-line-length = 20
 
 [tool.ruff.lint]
 extend-select = [

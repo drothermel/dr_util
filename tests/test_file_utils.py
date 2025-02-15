@@ -1,7 +1,8 @@
-import dr_util.file_utils as fu
 import jsonlines
 import numpy as np
 import pytest
+
+import dr_util.file_utils as fu
 
 # Sample data for different formats
 sample_data = {
