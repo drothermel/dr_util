@@ -3,8 +3,7 @@ defaults:
     - _self_
 
 paths:
-    my_logs: ${paths.logs}/dr_util
-    my_data: ${paths.logs}/dr_util
+    proj_dir_name: dr_util
 
 hydra:
     run:

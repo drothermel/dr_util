@@ -1,0 +1,13 @@
+defaults:
+    - paths: mac
+    - s3man_source: refined
+    - _self_
+
+paths:
+    my_data: ${paths.data}/${s3man_source.out_dir_name}
+
+output:
+    file_name: wiki_conf.json
+    file: ${paths.my_data}/${output.file_name}
+    
+proj_dir_name: s3man

@@ -9,7 +9,7 @@ from omegaconf import DictConfig
 #      source.key=wikipedia_model/config.json
 #      output.file=refined/wikipedia_model_config.json
 
-@hydra.main(version_base=None, config_path="../configs", config_name="s3man_config")
+@hydra.main(version_base=None, config_path="../configs", config_name="s3man")
 def main(cfg: DictConfig) -> None:
     logging.basicConfig(level="DEBUG")
 
