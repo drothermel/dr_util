@@ -97,10 +97,12 @@ def test_load_files_with_nonexistent_file(file_format, tmp_path):
         assert loaded_data[0] == sample_data[file_format]
         assert loaded_data[1] is None
 
+
 # Helper function to create a temporary JSONL file
 def create_jsonl_file(path, lines):
     with jsonlines.open(path, mode="w") as writer:
         writer.write_all(lines)
+
 
 def test_jsonl_generator_valid_file(tmp_path):
     # Temporary JSONL file path
@@ -110,7 +112,7 @@ def test_jsonl_generator_valid_file(tmp_path):
     test_data = [
         {"name": "Alice", "age": 25},
         {"name": "Bob", "age": 30},
-        {"name": "Charlie", "age": 35}
+        {"name": "Charlie", "age": 35},
     ]
 
     create_jsonl_file(jsonl_path, test_data)
@@ -120,6 +122,7 @@ def test_jsonl_generator_valid_file(tmp_path):
 
     # Assert the results match the test data
     assert results == test_data
+
 
 def test_jsonl_generator_empty_file(tmp_path):
     # Temporary JSONL file path
