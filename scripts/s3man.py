@@ -1,8 +1,9 @@
+import hydra
+from omegaconf import DictConfig
 import logging
 
-import hydra
 from dr_util.api_wrappers.aws_utils import S3Manager
-from omegaconf import DictConfig
+import dr_util.logging as lu
 
 # To test downloading from s3:
 #  uv run s3man 
@@ -11,7 +12,7 @@ from omegaconf import DictConfig
 
 @hydra.main(version_base=None, config_path="../configs", config_name="s3man")
 def main(cfg: DictConfig) -> None:
-    logging.basicConfig(level="DEBUG")
+    lu.log_cfg(cfg)
 
     logging.info(">> Creating S3Manager and requesting file")
     s3m = S3Manager()
