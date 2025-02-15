@@ -1,10 +1,9 @@
-from typing import Generator
-
 import io
 import json
 import logging
 import pickle
 import sys
+from collections.abc import Generator
 from pathlib import Path
 
 import jsonlines
@@ -101,8 +100,7 @@ def pathlib_help():
 
 def jsonl_generator(path: str) -> Generator:
     with jsonlines.open(path) as reader:
-        for line in reader:
-            yield line
+        yield from reader
 
 
 def load_files(path_list):

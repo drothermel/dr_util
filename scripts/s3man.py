@@ -3,7 +3,7 @@ import logging
 import hydra
 from omegaconf import DictConfig
 
-import dr_util.logging as lu
+import dr_util.log_utils as lu
 from dr_util.api_wrappers.aws_utils import S3Manager
 
 """

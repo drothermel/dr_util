@@ -3,7 +3,7 @@ import logging
 import hydra
 from omegaconf import DictConfig
 
-import dr_util.logging as lu
+import dr_util.log_utils as lu
 
 
 @hydra.main(version_base=None, config_path="../configs", config_name="base_config")

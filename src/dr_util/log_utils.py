@@ -1,6 +1,8 @@
-from functools import singledispatch
-from omegaconf import DictConfig, OmegaConf
 import logging
+from functools import singledispatch
+
+from omegaconf import DictConfig, OmegaConf
+
 
 @singledispatch
 def cfg_to_loggable_lines(cfg):
@@ -19,7 +21,7 @@ def _(cfg):
     return cfg_str.strip("\n").split("\n")
     
 def log_cfg(cfg):
-    cfg_log_str = '\n'.join([
+    cfg_log_str = "\n".join([
         "\n",
         "=" * 19 + "   Config   " + "=" * 19,
         *cfg_to_loggable_lines(cfg),

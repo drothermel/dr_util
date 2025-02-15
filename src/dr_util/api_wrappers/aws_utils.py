@@ -5,14 +5,13 @@ https://github.com/amazon-science/ReFinED/
 
 import logging
 from pathlib import Path
-from typing import Optional
 
 import boto3
 from botocore.handlers import disable_signing
 
 
 class S3Manager:
-    def __init__(self, boto3_session: Optional[boto3.Session] = None):
+    def __init__(self, boto3_session: boto3.Session | None = None):
         """
         :param boto3_session: boto3 session (`boto3.Session`) optional,
         if not set will use default session
