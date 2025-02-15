@@ -1,6 +1,10 @@
 defaults:
-    - _self_
     - paths: mac
+    - _self_
+
+paths:
+    my_logs: ${paths.logs}/dr_util
+    my_data: ${paths.logs}/dr_util
 
 hydra:
     run:

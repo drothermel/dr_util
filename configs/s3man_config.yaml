@@ -1,9 +1,15 @@
 defaults:
+    - paths: mac
     - s3man_source: refined
     - _self_
 
-output: 
-    path_base: /Users/daniellerothermel/drotherm/data/
-    file: refined/wiki_conf.json
+paths:
+    my_logs: ${paths.logs}/s3man
+    my_data: ${paths.logs}/refined
+
+output:
+    dir: ${paths.my_data}
+    file_name: wiki_conf.json
+    file: ${output.dir}/${output.file_name}
     
 
