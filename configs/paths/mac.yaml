@@ -1,4 +1,4 @@
 root: /Users/daniellerothermel/drotherm
-data: ${paths.root}/data/dr_util/
-logs: ${paths.root}/logs/dr_util/
+data: ${paths.root}/data/dr_util
+logs: ${paths.root}/logs/dr_util
 run_dir: ${paths.logs}/${now:%Y-%m-%d}/${now:%H-%M-%S}

@@ -13,14 +13,15 @@ def _(cfg):
     cfg_str = str(cfg)
     return cfg_str.strip("\n").split("\n")
 
-@cfg_to_loggable_lines.register(DictConfig):
+@cfg_to_loggable_lines.register(DictConfig)
+def _(cfg):
     resolved_cfg = OmegaConf.to_container(cfg, resolve=True)
     cfg_str = OmegaConf.to_yaml(resolved_cfg)
     return cfg_str.strip("\n").split("\n")
     
 def log_cfg(cfg):
     cfg_log_str = '\n'.join([
-        "",
+        "\n",
         "=" * 19 + "   Config   " + "=" * 19,
         *cfg_to_loggable_lines(cfg),
         "=" * 50,
