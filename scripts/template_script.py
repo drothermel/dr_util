@@ -17,8 +17,8 @@ def run(cfg: DictConfig):
     # Test Metrics Class
     for ns in random.choices(range(1, 11), k=100):
         loss = random.random()
-        md.train({'loss': loss, 'num_samples': ns}, ns)
-        md.val({'loss': loss-0.5, 'num_smaples': ns}, ns)
+        md.train({"loss": loss, "num_samples": ns}, ns)
+        md.val({"loss": loss-0.5, "num_smaples": ns}, ns)
 
     print(">> Raw Data")
     for k, v in md.groups.items():
@@ -27,9 +27,9 @@ def run(cfg: DictConfig):
         print()
 
     print()
-    md.agg_print('train')
+    md.agg_print("train")
     print()
-    md.agg_print('val')
+    md.agg_print("val")
     print()
 
     logging.info(":: Goodbye ::")

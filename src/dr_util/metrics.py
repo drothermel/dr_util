@@ -1,9 +1,8 @@
 import logging
-from functools import singledispatch, singledispatchmethod
 from enum import Enum
+from functools import singledispatch, singledispatchmethod
 
 from omegaconf import DictConfig, OmegaConf
-
 
 # ---------------------------------------------------------
 #                         Log Cfg
@@ -138,7 +137,7 @@ class MetricsGroup:
 class Metrics:
     def __init__(self, cfg):
         self.cfg = cfg
-        self.group_names = ['train', 'val']
+        self.group_names = ["train", "val"]
         self.groups = {
             name: MetricsGroup(cfg, name) for name in self.group_names
         }
@@ -147,10 +146,10 @@ class Metrics:
         log_cfg(self.cfg if cfg is None else cfg)
     
     def train(self, data, ns=1):
-        self.groups['train'].add(data, ns=ns)
+        self.groups["train"].add(data, ns=ns)
 
     def val(self, data, ns=1):
-        self.groups['val'].add(data, ns=ns)
+        self.groups["val"].add(data, ns=ns)
 
     def agg(data_name):
         assert data_name in self.groups, f">> Invalid Data Name: {data_name}"
