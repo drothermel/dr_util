@@ -62,8 +62,8 @@ def add_list(data, key, val):
     data[key].append(val)
 
 
-def agg_passthrough(data, key):  # noqa: ARG001
-    return data
+def agg_passthrough(data, key):
+    return data[key]
 
 
 def agg_none(data, key):  # noqa: ARG001
@@ -87,27 +87,26 @@ class MetricsGroup:
         self.add_fxns = {}
         self.agg_fxns = {}
 
+        self._init_data()
+
     def _init_data(self):
         if self.data_structure is None:
             return
 
         for key, data_type in self.data_structure.items():
             match data_type:
-                case MetricType.INT:
-                    init_val = 0
-                    add_fxn = add_sum
-                    agg_fxn = agg_passthrough
-                case MetricType.LIST:
-                    init_val = []
-                    add_fxn = add_list
-                    agg_fxn = agg_none
-                case MetricType.BATCH_WEIGHTED_AVG_LIST:
-                    init_val = []
-                    add_fxn = add_list
-                    agg_fxn = agg_batch_weighted_list_avg
-            self.data[key] = init_val
-            self.add_fxns[key] = add_fxn
-            self.agg_fxns[key] = agg_fxn
+                case MetricType.INT.value:
+                    self.data[key] = 0
+                    self.add_fxns[key] = add_sum
+                    self.agg_fxns[key] = agg_passthrough
+                case MetricType.LIST.value:
+                    self.data[key] = []
+                    self.add_fxns[key] = add_list
+                    self.agg_fxns[key] = agg_none
+                case MetricType.BATCH_WEIGHTED_AVG_LIST.value:
+                    self.data[key] = []
+                    self.add_fxns[key] = add_list
+                    self.agg_fxns[key] = agg_batch_weighted_list_avg
 
     def _add_tuple(self, key, val):
         assert key in self.data, f">> Invalid Key: {key}"
@@ -164,4 +163,10 @@ class Metrics:
         agg_data = self.agg(data_name)
         for key in self.cfg.metrics:
             if key in agg_data:
-                print(f"  - {key:40} | {agg_data[key]}")
+                val = agg_data[key]
+                if isinstance(val, float) and (val < 1 or val > -1):
+                    print(f"  - {key:20} | {val:0.4f}")
+                elif isinstance(val, float):
+                    print(f"  - {key:20} | {val:0.2f}")
+                else:
+                    print(f"  - {key:20} | {val}")

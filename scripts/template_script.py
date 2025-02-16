@@ -18,15 +18,8 @@ def run(cfg: DictConfig):
     for ns in random.choices(range(1, 11), k=100):
         loss = random.random()
         md.train({"loss": loss, "num_samples": ns}, ns)
-        md.val({"loss": loss - 0.5, "num_smaples": ns}, ns)
+        md.val({"loss": loss - 0.5, "num_samples": ns}, ns)
 
-    print(">> Raw Data")
-    for k, v in md.groups.items():
-        print(k)
-        print(v.data)
-        print()
-
-    print()
     md.agg_print("train")
     print()
     md.agg_print("val")
