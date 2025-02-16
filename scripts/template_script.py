@@ -3,12 +3,12 @@ import logging
 import hydra
 from omegaconf import DictConfig
 
-import dr_util.log_utils as lu
+from dr_util.metrics import log_cfg
 
 
 @hydra.main(version_base=None, config_path="../configs", config_name="base_config")
 def run(cfg: DictConfig):
-    lu.log_cfg(cfg)
+    log_cfg(cfg)
     logging.info(">> Welcome to your new script")
     logging.info(":: Goodbye ::")
 

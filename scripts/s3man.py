@@ -3,8 +3,8 @@ import logging
 import hydra
 from omegaconf import DictConfig
 
-import dr_util.log_utils as lu
 from dr_util.api_wrappers.aws_utils import S3Manager
+from dr_util.metrics import log_cfg
 
 """
 This script downloads a file from s3 to a local destination.
@@ -22,7 +22,7 @@ Cfg fields you most likely want to modify
 
 @hydra.main(version_base=None, config_path="../configs", config_name="s3man")
 def main(cfg: DictConfig) -> None:
-    lu.log_cfg(cfg)
+    log_cfg(cfg)
 
     logging.info(">> Creating S3Manager and requesting file")
     s3m = S3Manager()
