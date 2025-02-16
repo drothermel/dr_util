@@ -56,10 +56,10 @@ def add_sum(data, key, val):
 def add_list(data, key, val):
     data[key].append(val)
 
-def agg_passthrough(data, key):
+def agg_passthrough(data, key): # noqa: ARG001
     return data
 
-def agg_none(data, key):
+def agg_none(data, key): # noqa: ARG001
     return None
 
 def agg_batch_weighted_list_avg(data, key):
@@ -110,12 +110,12 @@ class MetricsGroup:
         self.add_fxns[key](self.data, key, val)
 
     @singledispatchmethod
-    def add(self, data, ns=1):
-        assert False, f">> Unexpected data type: {type(data)}"
+    def add(self, data, ns=1): # noqa: ARG002 (unused args)
+        assert False, f">> Unexpected data type: {type(data)}" # noqa
 
     @add.register(tuple)
     def _(self, data, ns=1):
-        assert len(data) == 2
+        assert len(data) == len(("key", "val"))
         self._add_tuple(*data)
         self._add_tuple(BATCH_KEY, ns)
         
@@ -127,7 +127,7 @@ class MetricsGroup:
 
     def agg(self):
         agg_data = {}
-        for key, val in self.data.items():
+        for key in self.data:
             agg_val = self.agg_fxns[key](self.data, key)
             if agg_val is not None:
                 agg_data[key] = agg_val
@@ -151,14 +151,14 @@ class Metrics:
     def val(self, data, ns=1):
         self.groups["val"].add(data, ns=ns)
 
-    def agg(data_name):
+    def agg(self, data_name):
         assert data_name in self.groups, f">> Invalid Data Name: {data_name}"
         return self.groups[data_name].agg()
 
-    def agg_print(data_name):
+    def agg_print(self, data_name):
         print(f":: Aggregate {data_name} ::")
         agg_data = self.agg(data_name)
-        for key, _ in self.cfg.metrics.items():
+        for key in self.cfg.metrics:
             if key in agg_data:
                 print(f"  - {key:40} | {agg_data[key]}")
 

@@ -85,6 +85,7 @@ ignore = [
     "TD002", # include author name with todo
     "TD003", # link to issue after todo
     "FIX002", # throws on all TODOs
+    "T201", # ignore prints for now
 ]
 
 
