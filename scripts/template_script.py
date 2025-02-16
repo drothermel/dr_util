@@ -18,7 +18,7 @@ def run(cfg: DictConfig):
     for ns in random.choices(range(1, 11), k=100):
         loss = random.random()
         md.train({"loss": loss, "num_samples": ns}, ns)
-        md.val({"loss": loss-0.5, "num_smaples": ns}, ns)
+        md.val({"loss": loss - 0.5, "num_smaples": ns}, ns)
 
     print(">> Raw Data")
     for k, v in md.groups.items():
@@ -33,8 +33,6 @@ def run(cfg: DictConfig):
     print()
 
     logging.info(":: Goodbye ::")
-
-
 
 
 if __name__ == "__main__":
