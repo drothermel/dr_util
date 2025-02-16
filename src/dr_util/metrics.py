@@ -111,17 +111,17 @@ class MetricsGroup:
         self.add_fxns[key](self.data, key, val)
 
     @singledispatchmethod
-    def add(self, data, ns=None):
+    def add(self, data, ns=1):
         assert False, f">> Unexpected data type: {type(data)}"
 
     @add.register(tuple)
-    def _(self, data, ns=None):
+    def _(self, data, ns=1):
         assert len(data) == 2
         self._add_tuple(*data)
         self._add_tuple(BATCH_KEY, ns)
         
     @add.register(dict)
-    def _(self, data, ns=None):
+    def _(self, data, ns=1):
         for key, val in data.items():
             self._add_tuple(key, val)
         self._add_tuple(BATCH_KEY, ns)
@@ -146,11 +146,11 @@ class Metrics:
     def log_cfg(self, cfg=None):
         log_cfg(self.cfg if cfg is None else cfg)
     
-    def train(self, data, n=1):
-        self.groups['train'].add(data, n=n)
+    def train(self, data, ns=1):
+        self.groups['train'].add(data, ns=ns)
 
-    def val(self, data, n=1):
-        self.groups['val'].add(data, n=n)
+    def val(self, data, ns=1):
+        self.groups['val'].add(data, ns=ns)
 
     def agg(data_name):
         assert data_name in self.groups, f">> Invalid Data Name: {data_name}"
