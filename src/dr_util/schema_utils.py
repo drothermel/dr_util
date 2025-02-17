@@ -26,8 +26,6 @@ def lenient_validate(cls):
 
     # Collect the field names defined in the dataclass.
     valid_field_names = {f.name for f in fields(cls)}
-    print(">> Wrapping Data Class")
-    print("     Expected field names:", valid_field_names)
     
     def __init__(self, *args, **kwargs):
         self.missing_or_invalid_keys = set()
@@ -65,9 +63,10 @@ def lenient_validate(cls):
                 assert isinstance(curr_val, dict) or isinstance(curr_val, None)
                 nested_dataclass = default(**curr_val, class_name=name)
                 setattr(self, name, nested_dataclass)
-                self.missing_or_invalid_keys.update(
+                self.missing_or_invalid_keys.update([
+                    f'{name}.{k}' for k in 
                     nested_dataclass.missing_or_invalid_keys
-                )
+                ])
             
             # 3. Immutable value
             #   If a non-missing, non-nested config was assigned to default

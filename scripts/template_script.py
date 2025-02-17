@@ -10,17 +10,16 @@ from dr_util.schemas import get_schema
 
 @hydra.main(version_base=None, config_path="../configs", config_name="base_config")
 def run(cfg: DictConfig):
-    print("\n>> Begin run")
-    if not cv.validate_config(cfg, 'uses_metrics', get_schema):
+    if not cv.validate_cfg(cfg, 'uses_metrics', get_schema):
         return
-    
-    
-    """
+
     # Make Metrics and Log Cfg
     md = Metrics(cfg)
     md.log(">> Welcome to your new script")
-    md.log(cfg)
-
+    md.log(cv.get_cfg_str(cfg))
+    
+    
+    """
     # Use Metrics Class
     for ns in random.choices(range(1, 11), k=100):
         loss = random.random()

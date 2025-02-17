@@ -21,9 +21,6 @@ def get_schema(config_type):
 @lenient_validate
 @dataclass
 class MetricsInitConfig:
-    half_moon: str = MISSING
-    fields_bay: str = MISSING
-    loss: str = MISSING
     batch_size: str = "list"
 
 
@@ -41,6 +38,5 @@ class MetricsConfig:
 @lenient_validate
 @dataclass
 class UsingMetricsConfig:
-    resources: List = MISSING
     metrics: Type = MetricsConfig
 
