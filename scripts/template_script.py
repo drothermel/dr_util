@@ -1,13 +1,21 @@
 import random
-
 import hydra
 from omegaconf import DictConfig
 
 from dr_util.metrics import Metrics
+import dr_util.config_verification as cv
+
+from dr_util.schemas import get_schema
 
 
 @hydra.main(version_base=None, config_path="../configs", config_name="base_config")
 def run(cfg: DictConfig):
+    print("\n>> Begin run")
+    if not cv.validate_config(cfg, 'uses_metrics', get_schema):
+        return
+    
+    
+    """
     # Make Metrics and Log Cfg
     md = Metrics(cfg)
     md.log(">> Welcome to your new script")
@@ -21,6 +29,7 @@ def run(cfg: DictConfig):
     md.agg_log("train")
     md.agg_log("val")
     md.log(":: Goodbye ::")
+    """
 
 
 if __name__ == "__main__":

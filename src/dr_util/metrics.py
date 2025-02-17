@@ -63,7 +63,7 @@ def create_logger(cfg, logger_type):
 class HydraLogger:
     def __init__(self, cfg):
         # Hydra sets up the logging cfg at start of run
-        self.type = LoggerType.HYRDA
+        self.type = LoggerType.HYDRA
         self.cfg = cfg
         self.log(">> Initialize HydraLogger")
 
