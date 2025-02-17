@@ -38,11 +38,12 @@ def get_cfg_str(cfg):
         ]
     )
 
+
 # ---------------------------------------------------------
 #                         Validate Cfg
 # ---------------------------------------------------------
 
-    
+
 def validate_cfg(cfg, config_type, schema_fxn):
     # Select the schema to validate with
     schema_cls = schema_fxn(config_type)
@@ -57,10 +58,9 @@ def validate_cfg(cfg, config_type, schema_fxn):
         logging.error(get_cfg_str(cfg))
         return False
     return True
-            
+
 
 def get_bad_keys_by_schema(cfg, schema_cls):
     input_dict = OmegaConf.to_container(cfg, resolve=True)
     input_data_class = schema_cls(**input_dict, class_name="Top Level Config")
     return input_data_class.missing_or_invalid_keys
-

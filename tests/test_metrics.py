@@ -27,13 +27,13 @@ def dummy_cfg():
     return SimpleNamespace(
         metrics=SimpleNamespace(
             # Uses MetricType Enum
-            init = {
+            init={
                 "loss": "int",  # INT.value
                 "preds": "list",  # LIST.value
                 "weighted": "batch_weighted_avg_list",  # BATCH_WEIGHTED_AVG_LIST.value
                 BATCH_KEY: "list",  # This must be a list so that add_list is used.
             },
-            loggers = ["hydra"],
+            loggers=["hydra"],
         ),
     )
 

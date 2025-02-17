@@ -3,8 +3,9 @@ import pprint
 from enum import Enum
 from functools import singledispatchmethod
 
-import dr_util.print_utils as pu
 from omegaconf import DictConfig
+
+import dr_util.print_utils as pu
 
 # ---------------------------------------------------------
 #                     Logger Classes
@@ -42,7 +43,7 @@ class HydraLogger:
 
     @log.register(DictConfig)
     def _(self, value):
-        pu.log_cfg_str(self.cfg)
+        pu.log_cfg_str(value)
 
     @log.register(list)
     def _(self, value):

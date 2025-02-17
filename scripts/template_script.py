@@ -17,8 +17,7 @@ def run(cfg: DictConfig):
     md = Metrics(cfg)
     md.log(cfg)
     md.log(">> Welcome to your new script")
-    
-    
+
     # Use Metrics Class
     for ns in random.choices(range(1, 11), k=100):
         loss = random.random()

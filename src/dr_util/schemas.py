@@ -7,15 +7,18 @@ from dr_util.schema_utils import lenient_validate
 class ConfigType(Enum):
     USES_METRICS = "uses_metrics"
 
+
 def get_schema(config_type):
     match config_type:
         case ConfigType.USES_METRICS.value:
             return UsingMetricsConfig
     return None
 
+
 #########################################################
-#             Config Definitions 
+#             Config Definitions
 #########################################################
+
 
 @lenient_validate
 @dataclass
@@ -31,11 +34,11 @@ class MetricsConfig:
 
 
 #########################################################
-#             Config Interface Definitions 
+#             Config Interface Definitions
 #########################################################
+
 
 @lenient_validate
 @dataclass
 class UsingMetricsConfig:
     metrics: type = MetricsConfig
-

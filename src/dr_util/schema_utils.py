@@ -10,8 +10,8 @@ def lenient_validate(cls):
 
     # Collect the field names defined in the dataclass.
     valid_field_names = {f.name for f in fields(cls)}
-    
-    def __init__(self, *args, **kwargs):
+
+    def __init__(self, *args, **kwargs):  # noqa: N807
         self.missing_or_invalid_keys = set()
 
         # Drop extra keys and add missing keys
@@ -44,21 +44,19 @@ def lenient_validate(cls):
             #   If the default was a dataclass schema, the current
             #   value should be passed in to initialize the schema
             if isinstance(default, type):
-                assert isinstance(curr_val, dict) or isinstance(curr_val, None)
+                assert isinstance(curr_val, dict | None)
                 nested_dataclass = default(**curr_val, class_name=name)
                 setattr(self, name, nested_dataclass)
-                self.missing_or_invalid_keys.update([
-                    f"{name}.{k}" for k in 
-                    nested_dataclass.missing_or_invalid_keys
-                ])
-            
+                self.missing_or_invalid_keys.update(
+                    [f"{name}.{k}" for k in nested_dataclass.missing_or_invalid_keys]
+                )
+
             # 3. Immutable value
             #   If a non-missing, non-nested config was assigned to default
             #   it should be immutable and shouldn't have changed during init
-            if default is not MISSING and not isinstance(default, type):
+            if default is not MISSING and not isinstance(default, type):  # noqa
                 if curr_val != default:
                     self.missing_or_invalid_keys.add(name)
 
     cls.__init__ = __init__
     return cls
-

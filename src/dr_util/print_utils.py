@@ -1,7 +1,9 @@
 import logging
+from dataclasses import asdict
 from functools import singledispatch
 
 from omegaconf import DictConfig, OmegaConf
+
 
 def get_dict_str(dt, indent=2):
     strings = []
@@ -18,10 +20,12 @@ def get_dict_str(dt, indent=2):
 def print_dict(dt, indent=2):
     print(get_dict_str(dt, indent=indent))
 
+
 def print_dataclass(dc):
     print("=========== Data Class ============")
     print_dict(asdict(dc))
     print("===================================")
+
 
 # ---------------------------------------------------------
 #                         Log Cfg
@@ -58,6 +62,6 @@ def get_cfg_str(cfg):
         ]
     )
 
+
 def log_cfg_str(cfg):
     logging.info(get_cfg_str(cfg))
-
