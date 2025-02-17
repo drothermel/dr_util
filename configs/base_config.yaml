@@ -15,8 +15,11 @@ hydra:
                 datefmt: "%Y-%m-%d %H:%M:%S"
 
 metrics:
-    batch_size: "list"
-    num_samples: "int"
-    loss: "batch_weighted_avg_list"
+    loggers:
+        - hydra
+    init:
+        batch_size: list
+        num_samples: int
+        loss: batch_weighted_avg_list
 
 seed: 42

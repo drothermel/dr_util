@@ -50,12 +50,20 @@ class LoggerType(Enum):
     HYDRA = "hydra"
     JSON = "json"
 
+def create_logger(cfg, logger_type):
+    match logger_type:
+        case LoggerType.HYDRA.value:
+            return HydraLogger(cfg)
+        case LoggerType.JSON.value:
+            assert False, "Not implemented yet"
+    assert False, f">> Unknown logger type: {logger_type}"
 
 class HydraLogger:
     def __init__(self, cfg):
         # Hydra sets up the logging cfg at start of run
         self.type = LoggerType.HYRDA
         self.cfg = cfg
+        self.log(">> Initialize HydraLogger")
 
     @singledispatchmethod
     def log(self, value):
@@ -123,10 +131,11 @@ def agg_batch_weighted_list_avg(data, key):
     return weighted_sum * 1.0 / total_samples
 
 
-class MetricsGroup:
-    def __init__(self, cfg, name=""):
+class MetricsSubgroup:
+    def __init__(self, cfg, name="", metrics=None):
         self.name = name
-        self.data_structure = cfg.metrics
+        self.metrics = metrics
+        self.data_structure = cfg.metrics.init
         self.data = {}
         self.add_fxns = {}
         self.agg_fxns = {}
@@ -187,10 +196,14 @@ class Metrics:
     def __init__(self, cfg):
         self.cfg = cfg
         self.group_names = ["train", "val"]
-        self.groups = {name: MetricsGroup(cfg, name) for name in self.group_names}
 
-    def log_cfg(self, cfg=None):
-        pass
+        # Initialize subgroups and loggers
+        self.groups = {name: MetricsSubgroup(cfg, name) for name in self.group_names}
+        self.loggers = [create_logger(cfg, lt) for lt in cfg.metrics.loggers]
+
+    def log(self, value):
+        for logger in self.loggers:
+            logger.log(value)
 
     def train(self, data, ns=1):
         self.groups["train"].add(data, ns=ns)
@@ -202,15 +215,15 @@ class Metrics:
         assert data_name in self.groups, f">> Invalid Data Name: {data_name}"
         return self.groups[data_name].agg()
 
-    def agg_print(self, data_name):
-        print(f":: Aggregate {data_name} ::")
+    def agg_log(self, data_name):
+        self.log(f":: Aggregate {data_name} ::")
         agg_data = self.agg(data_name)
-        for key in self.cfg.metrics:
+        for key in self.cfg.metrics.init:
             if key in agg_data:
                 val = agg_data[key]
                 if isinstance(val, float) and (val < 1 or val > -1):
-                    print(f"  - {key:20} | {val:0.4f}")
+                    self.log(f"  - {key:20} | {val:0.4f}")
                 elif isinstance(val, float):
-                    print(f"  - {key:20} | {val:0.2f}")
+                    self.log(f"  - {key:20} | {val:0.2f}")
                 else:
-                    print(f"  - {key:20} | {val}")
+                    self.log(f"  - {key:20} | {val}")
