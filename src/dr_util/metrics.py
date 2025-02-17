@@ -50,13 +50,15 @@ class LoggerType(Enum):
     HYDRA = "hydra"
     JSON = "json"
 
+
 def create_logger(cfg, logger_type):
     match logger_type:
         case LoggerType.HYDRA.value:
             return HydraLogger(cfg)
         case LoggerType.JSON.value:
-            assert False, "Not implemented yet"
-    assert False, f">> Unknown logger type: {logger_type}"
+            assert False, "Not implemented yet"  # noqa
+    assert False, f">> Unknown logger type: {logger_type}"  # noqa
+
 
 class HydraLogger:
     def __init__(self, cfg):

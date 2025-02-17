@@ -7,11 +7,11 @@ import pytest
 from dr_util.metrics import (
     BATCH_KEY,
     Metrics,
-    MetricsGroup,
+    MetricsSubgroup,
 )
 
 # ---------------------------
-# Tests for MetricsGroup
+# Tests for MetricsSubgroup
 # ---------------------------
 
 
@@ -25,17 +25,21 @@ def dummy_cfg():
     Include BATCH_KEY in the config as a list so that its values can be accumulated.
     """
     return SimpleNamespace(
-        metrics={  # Uses MetricType Enum
-            "loss": "int",  # INT.value
-            "preds": "list",  # LIST.value
-            "weighted": "batch_weighted_avg_list",  # BATCH_WEIGHTED_AVG_LIST.value
-            BATCH_KEY: "list",  # This must be a list so that add_list is used.
-        }
+        metrics=SimpleNamespace(
+            # Uses MetricType Enum
+            init = {
+                "loss": "int",  # INT.value
+                "preds": "list",  # LIST.value
+                "weighted": "batch_weighted_avg_list",  # BATCH_WEIGHTED_AVG_LIST.value
+                BATCH_KEY: "list",  # This must be a list so that add_list is used.
+            },
+            loggers = ["hydra"],
+        ),
     )
 
 
 def test_metrics_group_initialization(dummy_cfg):
-    mg = MetricsGroup(dummy_cfg, name="test")
+    mg = MetricsSubgroup(dummy_cfg, name="test")
     # Check that the metrics are initialized correctly.
     assert mg.data["loss"] == 0
     assert mg.data["preds"] == []
@@ -44,7 +48,7 @@ def test_metrics_group_initialization(dummy_cfg):
 
 
 def test_metrics_group_add_tuple(dummy_cfg):
-    mg = MetricsGroup(dummy_cfg, name="test")
+    mg = MetricsSubgroup(dummy_cfg, name="test")
     test_loss_val = 5
 
     # Add a tuple for an integer metric ("loss").
@@ -69,7 +73,7 @@ def test_metrics_group_add_tuple(dummy_cfg):
 
 
 def test_metrics_group_add_dict(dummy_cfg):
-    mg = MetricsGroup(dummy_cfg, name="test")
+    mg = MetricsSubgroup(dummy_cfg, name="test")
     test_metric_dict = {"loss": 2, "preds": "b", "weighted": 30}
     test_ns = 2
 
@@ -84,7 +88,7 @@ def test_metrics_group_add_dict(dummy_cfg):
 
 
 def test_metrics_group_aggregation(dummy_cfg):
-    mg = MetricsGroup(dummy_cfg, name="test")
+    mg = MetricsSubgroup(dummy_cfg, name="test")
 
     # Perform two add calls to build up data.
     # First call: add ("weighted", 10) with ns=2.
@@ -113,7 +117,7 @@ def test_metrics_group_aggregation(dummy_cfg):
 
 
 def test_metrics_group_invalid_inputs(dummy_cfg):
-    mg = MetricsGroup(dummy_cfg, name="test")
+    mg = MetricsSubgroup(dummy_cfg, name="test")
 
     # Passing a key that is not in the config should raise an assertion.
     with pytest.raises(AssertionError, match="Invalid Key"):
@@ -129,9 +133,9 @@ def test_metrics_group_invalid_inputs(dummy_cfg):
 
 
 def test_metrics_group_no_config():
-    # When cfg.metrics is None, the MetricsGroup init is an empty data dict.
+    # When cfg.metrics is None, the MetricsSubgroup init is an empty data dict.
     cfg = SimpleNamespace(metrics=None)
-    mg = MetricsGroup(cfg, "empty")
+    mg = MetricsSubgroup(cfg, "empty")
     assert mg.data == {}
 
 
@@ -141,16 +145,8 @@ def test_metrics_group_no_config():
 
 
 @pytest.fixture
-def dummy_metrics():
-    cfg = SimpleNamespace(
-        metrics={
-            "loss": "int",
-            "preds": "list",
-            "weighted": "batch_weighted_avg_list",
-            BATCH_KEY: "list",
-        }
-    )
-    return Metrics(cfg)
+def dummy_metrics(dummy_cfg):
+    return Metrics(dummy_cfg)
 
 
 def test_metrics_train_and_val(dummy_metrics):
@@ -179,13 +175,13 @@ def test_metrics_invalid_group(dummy_metrics):
         metrics_obj.agg("invalid_group")
 
 
-def test_metrics_agg_print(dummy_metrics):
+def test_metrics_agg_log(dummy_metrics):
     metrics_obj = dummy_metrics
     # Add a value so that aggregation produces some output.
     metrics_obj.train(("loss", 5))
     f = io.StringIO()
     with redirect_stdout(f):
-        metrics_obj.agg_print("train")
+        metrics_obj.agg_log("train")
     output = f.getvalue()
     # Check that the printed output contains the header and the "loss" metric.
     assert ":: Aggregate train ::" in output
