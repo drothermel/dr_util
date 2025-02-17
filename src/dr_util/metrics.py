@@ -40,16 +40,19 @@ def get_cfg_str(cfg):
         ]
     )
 
+
 # ---------------------------------------------------------
 #                     Logger Classes
 # ---------------------------------------------------------
+
 
 class LoggerType(Enum):
     HYDRA = "hydra"
     JSON = "json"
 
+
 class HydraLogger:
-    def __init__(cfg):
+    def __init__(self, cfg):
         # Hydra sets up the logging cfg at start of run
         self.type = LoggerType.HYRDA
         self.cfg = cfg
@@ -58,28 +61,28 @@ class HydraLogger:
     def log(self, value):
         logging.info(pprint.pformat(value))
 
-    @log.register(str):
+    @log.register(str)
     def _(self, value):
         logging.info(value)
 
-    @log.register(DictConfig):
+    @log.register(DictConfig)
     def _(self, value):
-        logging.info(get_cfg_str(value)
+        logging.info(get_cfg_str(value))
 
-    @log.register(list):
+    @log.register(list)
     def _(self, value):
-        if len(value) > 0 and all([isintance(v, str) for v in value]):
+        if len(value) > 0 and all(isinstance(v, str) for v in value):
             # Assume its a block of text, print directly as such
             # Extra newlines to avoid indent mismatch
-            logging.info('\n'.join(['', *value, '']))
+            logging.info("\n".join(["", *value, ""]))
         else:
             logging.info(pprint.pformat(value))
 
-    @log.register(dict):
+    @log.register(dict)
     def _(self, value):
         dict_str = pprint.pformat(value)
         # Extra newlines to avoid indent mismatch
-        logging.info('\n' + dict_str + '\n')
+        logging.info("\n" + dict_str + "\n")
 
 
 # ---------------------------------------------------------
@@ -187,7 +190,7 @@ class Metrics:
         self.groups = {name: MetricsGroup(cfg, name) for name in self.group_names}
 
     def log_cfg(self, cfg=None):
-        log_cfg(self.cfg if cfg is None else cfg)
+        pass
 
     def train(self, data, ns=1):
         self.groups["train"].add(data, ns=ns)
