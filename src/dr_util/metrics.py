@@ -1,9 +1,10 @@
 import logging
 import pprint
 from enum import Enum
-from functools import singledispatch, singledispatchmethod
+from functools import singledispatchmethod
 
-from omegaconf import DictConfig, OmegaConf
+import dr_util.print_utils as pu
+from omegaconf import DictConfig
 
 # ---------------------------------------------------------
 #                     Logger Classes
@@ -41,7 +42,7 @@ class HydraLogger:
 
     @log.register(DictConfig)
     def _(self, value):
-        logging.info(get_cfg_str(value))
+        pu.log_cfg_str(self.cfg)
 
     @log.register(list)
     def _(self, value):
@@ -54,7 +55,7 @@ class HydraLogger:
 
     @log.register(dict)
     def _(self, value):
-        dict_str = pprint.pformat(value)
+        dict_str = pu.get_dict_str(value, indent=2)
         # Extra newlines to avoid indent mismatch
         logging.info("\n" + dict_str + "\n")
 

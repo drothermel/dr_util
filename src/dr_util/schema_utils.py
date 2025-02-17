@@ -1,20 +1,4 @@
-from dataclasses import dataclass, fields, asdict, MISSING
-
-## Useful for debugging....
-def print_dict(dt, indent=2):
-    for k, v in dt.items():
-        ind_str = " " * indent + "- "
-        if isinstance(v, dict):
-            print(f"{ind_str}{k}:")
-            print_dict(v, indent + 2)
-        else:
-            print(f"{ind_str}{k}:", v)
-
-## Useful for debugging....
-def print_dataclass(dc):
-    print("=========== Data Class ============")
-    print_dict(asdict(dc))
-    print("===================================")
+from dataclasses import MISSING, fields
 
 
 def lenient_validate(cls):
@@ -35,7 +19,7 @@ def lenient_validate(cls):
         for k in valid_field_names:
             if k not in kwargs:
                 self.missing_or_invalid_keys.add(k)
-            updated_kwargs[k] = kwargs.get(k, None)
+            updated_kwargs[k] = kwargs.get(k)
 
         # Execute original init function
         original_init(self, *args, **updated_kwargs)
@@ -64,7 +48,7 @@ def lenient_validate(cls):
                 nested_dataclass = default(**curr_val, class_name=name)
                 setattr(self, name, nested_dataclass)
                 self.missing_or_invalid_keys.update([
-                    f'{name}.{k}' for k in 
+                    f"{name}.{k}" for k in 
                     nested_dataclass.missing_or_invalid_keys
                 ])
             

@@ -1,5 +1,4 @@
-from typing import List, Type, Optional
-from dataclasses import dataclass, fields, asdict, MISSING
+from dataclasses import MISSING, dataclass
 from enum import Enum
 
 from dr_util.schema_utils import lenient_validate
@@ -27,8 +26,8 @@ class MetricsInitConfig:
 @lenient_validate
 @dataclass
 class MetricsConfig:
-    loggers: List = MISSING
-    init: Type = MetricsInitConfig
+    loggers: list = MISSING
+    init: type = MetricsInitConfig
 
 
 #########################################################
@@ -38,5 +37,5 @@ class MetricsConfig:
 @lenient_validate
 @dataclass
 class UsingMetricsConfig:
-    metrics: Type = MetricsConfig
+    metrics: type = MetricsConfig
 

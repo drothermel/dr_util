@@ -3,6 +3,26 @@ from functools import singledispatch
 
 from omegaconf import DictConfig, OmegaConf
 
+def get_dict_str(dt, indent=2):
+    strings = []
+    for k, v in dt.items():
+        ind_str = " " * indent + "- "
+        if isinstance(v, dict):
+            strings.append(f"{ind_str}{k}:")
+            strings.extend(get_dict_str(v, indent + 2))
+        else:
+            strings.append(f"{ind_str}{k}:", v)
+    return strings
+
+
+def print_dict(dt, indent=2):
+    print(get_dict_str(dt, indent=indent))
+
+def print_dataclass(dc):
+    print("=========== Data Class ============")
+    print_dict(asdict(dc))
+    print("===================================")
+
 # ---------------------------------------------------------
 #                         Log Cfg
 # ---------------------------------------------------------
@@ -38,29 +58,6 @@ def get_cfg_str(cfg):
         ]
     )
 
-# ---------------------------------------------------------
-#                         Validate Cfg
-# ---------------------------------------------------------
-
-    
-def validate_cfg(cfg, config_type, schema_fxn):
-    # Select the schema to validate with
-    schema_cls = schema_fxn(config_type)
-    if schema_cls is None:
-        logging.error(f">> Invalid config schema type: {config_type}")
-        return False
-
-    # Get the missing keys
-    bad_keys = get_bad_keys_by_schema(cfg, schema_cls)
-    if len(bad_keys) > 0:
-        logging.error(f">> Invalid config, missing or invalid keys: {bad_keys}")
-        logging.error(get_cfg_str(cfg))
-        return False
-    return True
-            
-
-def get_bad_keys_by_schema(cfg, schema_cls):
-    input_dict = OmegaConf.to_container(cfg, resolve=True)
-    input_data_class = schema_cls(**input_dict, class_name="Top Level Config")
-    return input_data_class.missing_or_invalid_keys
+def log_cfg_str(cfg):
+    logging.info(get_cfg_str(cfg))
 
