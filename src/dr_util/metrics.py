@@ -193,3 +193,4 @@ class Metrics:
                     self.log(f"  - {key:20} | {val:0.2f}")
                 else:
                     self.log(f"  - {key:20} | {val}")
+        self.log("")

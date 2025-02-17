@@ -19,7 +19,6 @@ def run(cfg: DictConfig):
     md.log(cv.get_cfg_str(cfg))
     
     
-    """
     # Use Metrics Class
     for ns in random.choices(range(1, 11), k=100):
         loss = random.random()
@@ -28,7 +27,6 @@ def run(cfg: DictConfig):
     md.agg_log("train")
     md.agg_log("val")
     md.log(":: Goodbye ::")
-    """
 
 
 if __name__ == "__main__":
