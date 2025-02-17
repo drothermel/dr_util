@@ -40,6 +40,20 @@ def log_cfg(cfg):
     )
     logging.info(cfg_log_str)
 
+# ---------------------------------------------------------
+#                     Logger Classes
+# ---------------------------------------------------------
+
+class HydraLogger:
+    def __init__(cfg, metrics=None):
+        self.cfg = cfg
+        self.metrics = metrics
+
+    @singledispatchmethod
+    def log(self, value):
+        if self.metrics is None:
+            return
+        # TODO: add logging!
 
 # ---------------------------------------------------------
 #                     Metrics Classes
