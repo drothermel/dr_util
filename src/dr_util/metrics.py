@@ -1,4 +1,5 @@
 import logging
+import pprint
 from enum import Enum
 from functools import singledispatch, singledispatchmethod
 
@@ -28,8 +29,8 @@ def _(cfg):
     return cfg_str.strip("\n").split("\n")
 
 
-def log_cfg(cfg):
-    cfg_log_str = "\n".join(
+def get_cfg_str(cfg):
+    return "\n".join(
         [
             "\n",
             "=" * 19 + "   Config   " + "=" * 19,
@@ -38,22 +39,48 @@ def log_cfg(cfg):
             "",
         ]
     )
-    logging.info(cfg_log_str)
 
 # ---------------------------------------------------------
 #                     Logger Classes
 # ---------------------------------------------------------
 
+class LoggerType(Enum):
+    HYDRA = "hydra"
+    JSON = "json"
+
 class HydraLogger:
-    def __init__(cfg, metrics=None):
+    def __init__(cfg):
+        # Hydra sets up the logging cfg at start of run
+        self.type = LoggerType.HYRDA
         self.cfg = cfg
-        self.metrics = metrics
 
     @singledispatchmethod
     def log(self, value):
-        if self.metrics is None:
-            return
-        # TODO: add logging!
+        logging.info(pprint.pformat(value))
+
+    @log.register(str):
+    def _(self, value):
+        logging.info(value)
+
+    @log.register(DictConfig):
+    def _(self, value):
+        logging.info(get_cfg_str(value)
+
+    @log.register(list):
+    def _(self, value):
+        if len(value) > 0 and all([isintance(v, str) for v in value]):
+            # Assume its a block of text, print directly as such
+            # Extra newlines to avoid indent mismatch
+            logging.info('\n'.join(['', *value, '']))
+        else:
+            logging.info(pprint.pformat(value))
+
+    @log.register(dict):
+    def _(self, value):
+        dict_str = pprint.pformat(value)
+        # Extra newlines to avoid indent mismatch
+        logging.info('\n' + dict_str + '\n')
+
 
 # ---------------------------------------------------------
 #                     Metrics Classes
