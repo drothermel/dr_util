@@ -10,19 +10,19 @@ def validate_config(cfg, config_type, schema_fxn):
         return False
 
     # Get the missing keys
-    missing_keys = get_missing_keys_by_schema(cfg, schema_cls)
-    if len(missing_keys) > 0:
-        print(f">> Invalid config, missing required keys: {missing_keys}")
+    bad_keys = get_bad_keys_by_schema(cfg, schema_cls)
+    if len(bad_keys) > 0:
+        print(f">> Invalid config, missing or invalid keys: {bad_keys}")
         return False
     return True
             
 
-def get_missing_keys_by_schema(cfg, schema_cls):
+def get_bad_keys_by_schema(cfg, schema_cls):
     input_dict = OmegaConf.to_container(cfg, resolve=True)
     print_dict(input_dict)
     print()
     
     print(">> Convert dict into dataclass")
     input_data_class = schema_cls(**input_dict, class_name="Top Level Config")
-    return input_data_class.missing_keys
+    return input_data_class.missing_or_invalid_keys
 

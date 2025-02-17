@@ -30,67 +30,52 @@ def lenient_validate(cls):
     print("     Expected field names:", valid_field_names)
     
     def __init__(self, *args, **kwargs):
-        self.missing_keys = set()
+        self.missing_or_invalid_keys = set()
 
-        # Filter kwargs: keep only those that are valid field names.
-        filtered_kwargs = {k: v for k, v in kwargs.items() if k in valid_field_names}
-        # Note the keys that are missing and add them
-        missing_keys = [n for n in valid_field_names if n not in filtered_kwargs]
-        self.missing_keys.update(missing_keys)
-        filtered_kwargs.update({k: None for k in missing_keys})
+        # Drop extra keys and add missing keys
+        updated_kwargs = {}
+        for k in valid_field_names:
+            if k not in kwargs:
+                self.missing_or_invalid_keys.add(k)
+            updated_kwargs[k] = kwargs.get(k, None)
 
         # Execute original init function
-        original_init(self, *args, **filtered_kwargs)
+        original_init(self, *args, **updated_kwargs)
 
-        # Initialize any sub-dataclasses with passed in value
-        for k in valid_field_names:
-            if is_key_default_a_schema(k, self):
-                initialize_key_schema_with_input_val(k, self)
-
-        # Identify any missing required keys after 
+        # Nested initialization & finding of missing keys
         for name in valid_field_names:
+            # Default can be three things:
+            #   1. Missing
+            #   2. A nested config schema name to be initialized with data
+            #   3. An immutable value
             default = self.__dataclass_fields__[name].default
             curr_val = getattr(self, name)
 
-            # Verify the fields against the defaults
-            field_missing = get_field_missing_keys(name, default, curr_val)
+            # 1. Missing
+            #   If default was missing curr_val must be set before now
+            if default is MISSING:
+                # curr_val should be set to None at the latest in
+                # update_kwargs so this is a bug if not
+                assert curr_val is not MISSING, "There's a bug"
 
-            # Add any missing keys to the list
-            self.missing_keys.update(field_missing)
-
+            # 2. Nested Config Schema
+            #   If the default was a dataclass schema, the current
+            #   value should be passed in to initialize the schema
+            if isinstance(default, type):
+                assert isinstance(curr_val, dict) or isinstance(curr_val, None)
+                nested_dataclass = default(**curr_val, class_name=name)
+                setattr(self, name, nested_dataclass)
+                self.missing_or_invalid_keys.update(
+                    nested_dataclass.missing_or_invalid_keys
+                )
+            
+            # 3. Immutable value
+            #   If a non-missing, non-nested config was assigned to default
+            #   it should be immutable and shouldn't have changed during init
+            if default is not MISSING and not isinstance(default, type):
+                if curr_val != default:
+                    self.missing_or_invalid_keys.add(name)
 
     cls.__init__ = __init__
     return cls
 
-def is_key_default_a_schema(key, cls):
-    default = cls.__dataclass_fields__[key].default
-    return isinstance(default, type)
-
-def initialize_key_schema_with_input_val(key, cls):
-    default = cls.__dataclass_fields__[key].default
-    curr_val = getattr(cls, key)
-    setattr(cls, key, default(**curr_val, class_name=key))
-
-def get_field_missing_keys(name, default, curr_val):
-    # All missing values should be filled in
-    if default is MISSING:
-        if curr_val is MISSING:
-            print(f">> {name} | never initialized, still missing")
-            return [name]
-        return []
-
-    # Add the missing keys from children into own missing keys
-    if isinstance(default, type):
-        child_missing = [
-            f'{name}.{k}' for k in curr_val.missing_keys
-        ]
-        if len(child_missing) > 0:
-            print(f">> {name} | child missing: {child_missing}")
-            return child_missing
-        return[]
-
-    # If the default value is defined, the config val should match
-    if default != curr_val:
-        print(">> {name} | default doesn't equal current val")
-        return [name]
-    return []
