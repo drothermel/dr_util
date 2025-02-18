@@ -1,9 +1,9 @@
 import logging
-import jsonlines
 from enum import Enum
 from functools import singledispatchmethod
 
-from omegaconf import OmegaConf, DictConfig
+import jsonlines
+from omegaconf import DictConfig, OmegaConf
 
 import dr_util.print_utils as pu
 
@@ -71,25 +71,30 @@ class JsonLogger:
 
         # Setup json file
         self.path = f"{cfg.paths.run_dir}/json_out.jsonl"
-        self.writer = jsonlines.open(self.path, 'a')
+        self.writer = None
+        try:
+            self.writer = jsonlines.open(self.path, "a")
+        except:
+            logging.warn(">> Could not open jsonlines log file")
 
         logging.info(">> Initialize JSON Logger")
         logging.info(f"    - output path: {self.path}")
 
-    
     @singledispatchmethod
     def log(self, value):
-        self.writer.write({"type": type(value).__name__, "value": value})
+        if self.writer is not None:
+            self.writer.write({"type": type(value).__name__, "value": value})
 
     @log.register(dict)
     def _(self, value):
-        self.writer.write(value)
+        if self.writer is not None:
+            self.writer.write(value)
 
     @log.register(DictConfig)
     def _(self, value):
-        resolved_val = OmegaConf.to_container(value, resolve=True)
-        self.writer.write({"type": "dict_config", "value": resolved_val})
-
+        if self.writer is not None:
+            resolved_val = OmegaConf.to_container(value, resolve=True)
+            self.writer.write({"type": "dict_config", "value": resolved_val})
 
 
 # ---------------------------------------------------------
@@ -216,13 +221,13 @@ class Metrics:
 
     def agg_log(self, data_name):
         log_dict = {
-            'title': f"agg_{data_name}",
-            'data_name': data_name,
-            'agg_stats': {},
+            "title": f"agg_{data_name}",
+            "data_name": data_name,
+            "agg_stats": {},
         }
         agg_data = self.agg(data_name)
         for key in self.cfg.metrics.init:
             if key in agg_data:
-                log_dict['agg_stats'][key] = agg_data[key]
+                log_dict["agg_stats"][key] = agg_data[key]
 
         self.log(log_dict)

@@ -16,8 +16,9 @@ def get_dict_str_list(dt, indent=2):
             strings.append(f"{ind_str}{k}: {v}")
     return strings
 
+
 def get_dict_str(dt, indent=2):
-    return '\n'.join(['', *get_dict_str_list(dt, indent=indent), ''])
+    return "\n".join(["", *get_dict_str_list(dt, indent=indent), ""])
 
 
 def print_dict(dt, indent=2):
