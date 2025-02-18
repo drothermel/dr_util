@@ -74,8 +74,8 @@ class JsonLogger:
         self.writer = None
         try:
             self.writer = jsonlines.open(self.path, "a")
-        except:
-            logging.warn(">> Could not open jsonlines log file")
+        except:  # noqa
+            logging.warning(">> Could not open jsonlines log file")
 
         logging.info(">> Initialize JSON Logger")
         logging.info(f"    - output path: {self.path}")
