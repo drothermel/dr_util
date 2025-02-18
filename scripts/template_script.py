@@ -3,14 +3,14 @@ import random
 import hydra
 from omegaconf import DictConfig
 
-import dr_util.config_verification as cv
+from dr_util.config_verification import validate_cfg
 from dr_util.metrics import Metrics
 from dr_util.schemas import get_schema
 
 
 @hydra.main(version_base=None, config_path="../configs", config_name="base_config")
 def run(cfg: DictConfig):
-    if not cv.validate_cfg(cfg, "uses_metrics", get_schema):
+    if not validate_cfg(cfg, "uses_metrics", get_schema):
         return
 
     # Make Metrics and Log Cfg

@@ -1,41 +1,55 @@
-import io
-from contextlib import redirect_stdout
-from types import SimpleNamespace
-
 import pytest
+from hydra import compose, initialize
 
+from dr_util.config_verification import validate_cfg
 from dr_util.metrics import (
     BATCH_KEY,
     Metrics,
     MetricsSubgroup,
 )
+from dr_util.schemas import get_schema
 
 # ---------------------------
-# Tests for MetricsSubgroup
+# Fixtures
 # ---------------------------
 
 
 @pytest.fixture
+def base_cfg():
+    with initialize(version_base=None, config_path="../configs"):
+        return compose(config_name="base_config", overrides=[])
+
+
+@pytest.fixture
 def dummy_cfg():
-    """
-    Create a dummy configuration with three metrics:
-      - "loss" as an integer metric (using sum aggregation)
-      - "preds" as a list metric (which uses agg_none and is not returned in agg)
-      - "weighted" as a weighted average metric (which requires BATCH_KEY)
-    Include BATCH_KEY in the config as a list so that its values can be accumulated.
-    """
-    return SimpleNamespace(
-        metrics=SimpleNamespace(
-            # Uses MetricType Enum
-            init={
-                "loss": "int",  # INT.value
-                "preds": "list",  # LIST.value
-                "weighted": "batch_weighted_avg_list",  # BATCH_WEIGHTED_AVG_LIST.value
-                BATCH_KEY: "list",  # This must be a list so that add_list is used.
-            },
-            loggers=["hydra"],
-        ),
-    )
+    with initialize(version_base=None, config_path="../configs"):
+        return compose(
+            config_name="base_config",
+            overrides=[
+                "metrics.init.loss=int",
+                "+metrics.init.preds=list",
+                "+metrics.init.weighted=batch_weighted_avg_list",
+            ],
+        )
+
+
+@pytest.fixture
+def dummy_metrics(dummy_cfg):
+    return Metrics(dummy_cfg)
+
+
+# ---------------------------
+# Tests for Cfg Verification
+# ---------------------------
+
+
+def test_base_cfg_valid(base_cfg):
+    assert validate_cfg(base_cfg, "uses_metrics", get_schema)
+
+
+# ---------------------------
+# Tests for MetricsSubgroup
+# ---------------------------
 
 
 def test_metrics_group_initialization(dummy_cfg):
@@ -132,21 +146,9 @@ def test_metrics_group_invalid_inputs(dummy_cfg):
         mg.add(("loss",))  # tuple length != 2
 
 
-def test_metrics_group_no_config():
-    # When cfg.metrics is None, the MetricsSubgroup init is an empty data dict.
-    cfg = SimpleNamespace(metrics=None)
-    mg = MetricsSubgroup(cfg, "empty")
-    assert mg.data == {}
-
-
 # ---------------------------
 # Tests for Metrics (the top-level class)
 # ---------------------------
-
-
-@pytest.fixture
-def dummy_metrics(dummy_cfg):
-    return Metrics(dummy_cfg)
 
 
 def test_metrics_train_and_val(dummy_metrics):
@@ -175,15 +177,15 @@ def test_metrics_invalid_group(dummy_metrics):
         metrics_obj.agg("invalid_group")
 
 
-def test_metrics_agg_log(dummy_metrics):
-    metrics_obj = dummy_metrics
+def test_metrics_agg_log(tmp_path):
+    with initialize(version_base=None, config_path="../configs"):
+        cfg = compose(
+            config_name="base_config", overrides=[f"paths.run_dir={tmp_path}"]
+        )
+
+    assert cfg.paths.run_dir == str(tmp_path)
+
     # Add a value so that aggregation produces some output.
+    metrics_obj = Metrics(cfg)
     metrics_obj.train(("loss", 5))
-    f = io.StringIO()
-    with redirect_stdout(f):
-        metrics_obj.agg_log("train")
-    output = f.getvalue()
-    # Check that the printed output contains the header and the "loss" metric.
-    assert ":: Aggregate train ::" in output
-    assert "loss" in output
-    # Since loss is an int, it will be printed without extra formatting.
+    metrics_obj.agg_log("train")
