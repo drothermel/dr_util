@@ -45,7 +45,10 @@ def lenient_validate(cls):
             #   value should be passed in to initialize the schema
             if isinstance(default, type):
                 assert isinstance(curr_val, dict | None)
-                nested_dataclass = default(**curr_val, class_name=name)
+                if curr_val is None:
+                    nested_dataclass = default(class_name=name)
+                else:
+                    nested_dataclass = default(**curr_val, class_name=name)
                 setattr(self, name, nested_dataclass)
                 self.missing_or_invalid_keys.update(
                     [f"{name}.{k}" for k in nested_dataclass.missing_or_invalid_keys]
