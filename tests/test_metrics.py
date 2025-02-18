@@ -23,9 +23,6 @@ def base_cfg():
 @pytest.fixture
 def dummy_cfg(base_cfg):
     has_metrics = "metrics" in base_cfg
-    has_init = has_metrics and "init" in base_cfg.metrics
-    has_loss = has_metrics and has_init and "loss" in base_cfg.metrics.init
-
     if not has_metrics:
         with initialize(version_base=None, config_path="../configs"):
             return compose(
