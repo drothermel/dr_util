@@ -5,16 +5,19 @@ from functools import singledispatch
 from omegaconf import DictConfig, OmegaConf
 
 
-def get_dict_str(dt, indent=2):
+def get_dict_str_list(dt, indent=2):
     strings = []
     for k, v in dt.items():
         ind_str = " " * indent + "- "
         if isinstance(v, dict):
             strings.append(f"{ind_str}{k}:")
-            strings.extend(get_dict_str(v, indent + 2))
+            strings.extend(get_dict_str_list(v, indent + 2))
         else:
-            strings.append(f"{ind_str}{k}:", v)
+            strings.append(f"{ind_str}{k}: {v}")
     return strings
+
+def get_dict_str(dt, indent=2):
+    return '\n'.join(['', *get_dict_str_list(dt, indent=indent), ''])
 
 
 def print_dict(dt, indent=2):

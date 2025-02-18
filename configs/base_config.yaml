@@ -17,6 +17,7 @@ hydra:
 metrics:
     loggers:
         - hydra
+        - json
     init:
         batch_size: list
         num_samples: int

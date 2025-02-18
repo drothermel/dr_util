@@ -1,9 +1,9 @@
 import logging
-import pprint
+import jsonlines
 from enum import Enum
 from functools import singledispatchmethod
 
-from omegaconf import DictConfig
+from omegaconf import OmegaConf, DictConfig
 
 import dr_util.print_utils as pu
 
@@ -22,7 +22,7 @@ def create_logger(cfg, logger_type):
         case LoggerType.HYDRA.value:
             return HydraLogger(cfg)
         case LoggerType.JSON.value:
-            assert False, "Not implemented yet"  # noqa
+            return JsonLogger(cfg)
     assert False, f">> Unknown logger type: {logger_type}"  # noqa
 
 
@@ -32,10 +32,11 @@ class HydraLogger:
         self.type = LoggerType.HYDRA
         self.cfg = cfg
         self.log(">> Initialize HydraLogger")
+        self.pretty_log_dict = False
 
     @singledispatchmethod
     def log(self, value):
-        logging.info(pprint.pformat(value))
+        logging.info(str(value))
 
     @log.register(str)
     def _(self, value):
@@ -52,13 +53,43 @@ class HydraLogger:
             # Extra newlines to avoid indent mismatch
             logging.info("\n".join(["", *value, ""]))
         else:
-            logging.info(pprint.pformat(value))
+            logging.info(str(value))
 
     @log.register(dict)
     def _(self, value):
-        dict_str = pu.get_dict_str(value, indent=2)
-        # Extra newlines to avoid indent mismatch
-        logging.info("\n" + dict_str + "\n")
+        if self.pretty_log_dict:
+            dict_str = pu.get_dict_str(value, indent=2)
+            logging.info(dict_str)
+        else:
+            logging.info(value)
+
+
+class JsonLogger:
+    def __init__(self, cfg):
+        self.type = LoggerType.JSON
+        self.cfg = cfg
+
+        # Setup json file
+        self.path = f"{cfg.paths.run_dir}/json_out.jsonl"
+        self.writer = jsonlines.open(self.path, 'a')
+
+        logging.info(">> Initialize JSON Logger")
+        logging.info(f"    - output path: {self.path}")
+
+    
+    @singledispatchmethod
+    def log(self, value):
+        self.writer.write({"type": type(value).__name__, "value": value})
+
+    @log.register(dict)
+    def _(self, value):
+        self.writer.write(value)
+
+    @log.register(DictConfig)
+    def _(self, value):
+        resolved_val = OmegaConf.to_container(value, resolve=True)
+        self.writer.write({"type": "dict_config", "value": resolved_val})
+
 
 
 # ---------------------------------------------------------
@@ -184,15 +215,14 @@ class Metrics:
         return self.groups[data_name].agg()
 
     def agg_log(self, data_name):
-        self.log(f":: Aggregate {data_name} ::")
+        log_dict = {
+            'title': f"agg_{data_name}",
+            'data_name': data_name,
+            'agg_stats': {},
+        }
         agg_data = self.agg(data_name)
         for key in self.cfg.metrics.init:
             if key in agg_data:
-                val = agg_data[key]
-                if isinstance(val, float) and (val < 1 or val > -1):
-                    self.log(f"  - {key:20} | {val:0.4f}")
-                elif isinstance(val, float):
-                    self.log(f"  - {key:20} | {val:0.2f}")
-                else:
-                    self.log(f"  - {key:20} | {val}")
-        self.log("")
+                log_dict['agg_stats'][key] = agg_data[key]
+
+        self.log(log_dict)
