@@ -21,16 +21,30 @@ def base_cfg():
 
 
 @pytest.fixture
-def dummy_cfg():
-    with initialize(version_base=None, config_path="../configs"):
-        return compose(
-            config_name="base_config",
-            overrides=[
-                "metrics.init.loss=int",
-                "+metrics.init.preds=list",
-                "+metrics.init.weighted=batch_weighted_avg_list",
-            ],
-        )
+def dummy_cfg(base_cfg):
+    has_metrics = "metrics" in base_cfg
+    if not has_metrics:
+        with initialize(version_base=None, config_path="../configs"):
+            return compose(
+                config_name="base_config",
+                overrides=[
+                    "+metrics.loggers=[hydra,json]",
+                    "+metrics.init.loss=int",
+                    "+metrics.init.preds=list",
+                    "+metrics.init.weighted=batch_weighted_avg_list",
+                    f"+metrics.init.{BATCH_KEY}=list",
+                ],
+            )
+    else:
+        with initialize(version_base=None, config_path="../configs"):
+            return compose(
+                config_name="base_config",
+                overrides=[
+                    "metrics.init.loss=int",
+                    "+metrics.init.preds=list",
+                    "+metrics.init.weighted=batch_weighted_avg_list",
+                ],
+            )
 
 
 @pytest.fixture
