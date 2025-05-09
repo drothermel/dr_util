@@ -1,0 +1,23 @@
+name: cifar10
+num_workers: 8
+download: true
+split_seed: 909
+
+train:
+    source_split: train
+    transform: None
+    ratio: 0.8
+    batch_size: 10
+    shuffle: true
+val:
+    source_split: train
+    transform: None
+    ratio: 0.2
+    batch_size: 10
+    shuffle: false
+eval:
+    source_split: test
+    transform: None
+    ratio: 1.0
+    batch_size: 10
+    shuffle: false

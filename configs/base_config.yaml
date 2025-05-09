@@ -1,5 +1,6 @@
 defaults:
     - paths: mac
+    - data: cifar10
     - _self_
 
 paths:
