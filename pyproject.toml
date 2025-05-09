@@ -12,6 +12,8 @@ dependencies = [
     "hydra-core==1.3",
     "jsonlines>=4.0.0",
     "numpy>=2.2.3",
+    "torch>=2.7.0",
+    "torchvision>=0.22.0",
 ]
 
 [build-system]
@@ -86,6 +88,10 @@ ignore = [
     "TD003", # link to issue after todo
     "FIX002", # throws on all TODOs
     "T201", # ignore prints for now
+    "PT015", # assert always fails, exceptions slow down training code
+    "B011", # do not assert false, exceptions slow down training code
+    "PLR0913", # too many arguments in function def ???
+    "NPY002", # don't use np.random.seed, I don't trust myself to remember
 ]
 
 
