@@ -1,13 +1,11 @@
-import random
-
 import hydra
 from omegaconf import DictConfig
 
+import dr_util.data_utils as du
+import dr_util.determinism_utils as dtu
 from dr_util.config_verification import validate_cfg
 from dr_util.metrics import Metrics
 from dr_util.schemas import get_schema
-import dr_util.data_utils as du
-import dr_util.determinism_utils as dtu
 
 
 @hydra.main(version_base=None, config_path="../configs", config_name="base_config")
@@ -29,7 +27,9 @@ def run(cfg: DictConfig):
         download=cfg.data.download,
     )
     train_dataset, val_dataset = du.split_data(
-        dataset, cfg.data.train.ratio, data_split_seed=cfg.data.split_seed,
+        dataset,
+        cfg.data.train.ratio,
+        data_split_seed=cfg.data.split_seed,
     )
     generator = dtu.set_deterministic(cfg.seed)
     train_dl = du.get_dataloader(
@@ -42,7 +42,7 @@ def run(cfg: DictConfig):
     )
 
     for idx, (data, labels) in enumerate(train_dl):
-        if idx > 2:
+        if idx > 2:  # noqa: PLR2004
             break
         ns = len(data)
         loss = sum(labels).item()

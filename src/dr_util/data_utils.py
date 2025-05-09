@@ -1,19 +1,16 @@
 import torch
-import torchvision
-import torchvision.transforms as transforms
-import torchvision.datasets as datasets 
-import numpy as np
-import random
-from torch.utils.data import DataLoader, random_split, Subset
+from torch.utils.data import DataLoader
+from torchvision import datasets, transforms
 
 import dr_util.determinism_utils as dtu
 
 DEFAULT_DOWNLOAD = True
 DEFAULT_TRANSFORM = None
 
+
 def get_cifar_dataset(
     dataset_name,
-    source_split, # the official split (train or test)
+    source_split,  # the official split (train or test)
     root,
     transform=DEFAULT_TRANSFORM,
     download=DEFAULT_DOWNLOAD,
@@ -56,12 +53,13 @@ class TransformedSubset(torch.utils.data.Dataset):
     This is useful because Subsets themselves don't have a transform attribute
     that can be set after creation.
     """
+
     def __init__(self, subset, transform=None):
         self.subset = subset
         self.transform = transform
 
     def __getitem__(self, index):
-        x, y = self.subset[index] # Subset returns data from the original dataset
+        x, y = self.subset[index]  # Subset returns data from the original dataset
         if self.transform:
             x = self.transform(x)
         return x, y
@@ -69,14 +67,18 @@ class TransformedSubset(torch.utils.data.Dataset):
     def __len__(self):
         return len(self.subset)
 
+
 def get_tensor_transform():
-    return transforms.Compose([
-        transforms.ToTensor(),
-    ])
+    return transforms.Compose(
+        [
+            transforms.ToTensor(),
+        ]
+    )
+
 
 def apply_tensor_transform(data):
     return transforms.functional.to_tensor(data)
-    
+
 
 def get_dataloader(
     dataset,
@@ -86,10 +88,8 @@ def get_dataloader(
     generator,
     num_workers,
 ):
-    dataset_transformed = TransformedSubset(
-        dataset, transform=transform
-    )
-    loader = DataLoader(
+    dataset_transformed = TransformedSubset(dataset, transform=transform)
+    return DataLoader(
         dataset_transformed,
         batch_size=batch_size,
         shuffle=shuffle,
@@ -97,8 +97,7 @@ def get_dataloader(
         generator=generator,
         num_workers=num_workers,
     )
-    return loader
-    
+
 
 def split_data(dataset, ratio, data_split_seed=None):
     split_generator = torch.Generator()
@@ -109,8 +108,6 @@ def split_data(dataset, ratio, data_split_seed=None):
     num_first = int(ratio * num_samples)
     num_second = num_samples - num_first
     first_subset, second_subset = torch.utils.data.random_split(
-        dataset, 
-        [num_first, num_second], 
-        generator=split_generator
+        dataset, [num_first, num_second], generator=split_generator
     )
     return first_subset, second_subset

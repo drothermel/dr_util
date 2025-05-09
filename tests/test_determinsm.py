@@ -1,13 +1,11 @@
-import pytest
-
 import numpy as np
-from PIL import Image
 import torch
-import torchvision
-import torchvision.transforms as transforms
+from PIL import Image
+from torchvision import transforms
 
-import dr_util.determinism_utils as dtu
 import dr_util.data_utils as du
+import dr_util.determinism_utils as dtu
+
 
 class DummyDataset(torch.utils.data.Dataset):
     def __init__(self, num_samples=20, image_size=(32, 32), num_classes=10):
@@ -17,9 +15,11 @@ class DummyDataset(torch.utils.data.Dataset):
         self.data = []
         self.targets = []
 
-        for i in range(self.num_samples):
-            dummy_image_array = np.uint8(np.random.randint(0, 256, (*self.image_size, 3)))
-            pil_image = Image.fromarray(dummy_image_array, 'RGB')
+        for _ in range(self.num_samples):
+            dummy_image_array = np.uint8(
+                np.random.randint(0, 256, (*self.image_size, 3))
+            )
+            pil_image = Image.fromarray(dummy_image_array, "RGB")
             self.data.append(pil_image)
             self.targets.append(np.random.randint(0, self.num_classes))
 
@@ -28,6 +28,7 @@ class DummyDataset(torch.utils.data.Dataset):
 
     def __getitem__(self, index):
         return self.data[index], self.targets[index]
+
 
 def test_data_split_vs_general_determinism():
     dataset = DummyDataset(num_samples=100)
@@ -62,7 +63,7 @@ def test_data_split_vs_general_determinism():
     assert train_d1.indices != train_d2.indices
     assert val_d1.indices != val_d2.indices
     assert sum_d1 != sum_d2
-    
+
     # General Tests
     m1_sum = sum(p.sum().item() for p in model1.parameters())
     m2_sum = sum(p.sum().item() for p in model2.parameters())
