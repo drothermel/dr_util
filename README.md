@@ -1,36 +1,33 @@
 # dr_util
 Core python utils for ML research
 
-## Basic Rye Functionality
+## Basic uv Functionality
 
-Use rye for choosing the python version:
+Use uv to create the virtual environment:
 ```shell
 # Currently 3.12.2
-rye pin 3.12
+uv venv 3.12
 ```
 
-Use rye to run tests:
+Run tests with uv:
 ```shell
-# This works because we added pytest first as follows
-rye add --dev pytest
-
-# Then run the tests
-rye test
+# Ensure pytest is installed first
+uv run pytest
 # -s will disable stdout capture so you can see what's printed
 # -v for verbose
 ```
 
-Use rye to format files:
+Format files:
 ```shell
-rye fmt <optional:file>
+uv run ruff format <optional:file>
 ```
 
-Use rye to run ruff linter:
+Run ruff linter:
 ```shell
-rye lint
+uv run ruff check
 
 # or have it fix small errors
-rye lint --fix
+uv run ruff --fix
 ```
 
 ## Useful Features
@@ -41,7 +38,7 @@ rye lint --fix
 
 ### S3Manager
 
-Download files from s3: `rye run s3man`
+Download files from s3: `uv run s3man`
 
 Config setup:
 ```shell
