@@ -38,7 +38,7 @@ def print_dataclass(dc):
 
 @singledispatch
 def cfg_to_loggable_lines(cfg):
-    logging.warn(f">> Unexpected cfg type: {type(cfg)}")
+    logging.warning(f">> Unexpected cfg type: {type(cfg)}")
     return [str(cfg)]  # default, just stringify
 
 
