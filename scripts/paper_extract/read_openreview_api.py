@@ -262,7 +262,10 @@ if __name__ == "__main__":
 
     api_url = api_urls[args.api_name]
     TRIAL = 0
-    output_file = f"../../../data/rss_paper_data/open_review_papers.{args.api_name}.t{TRIAL}.jsonl"
+    output_file = (
+        f"../../../data/rss_paper_data/open_review_papers."
+        f"{args.api_name}.t{TRIAL}.jsonl"
+    )
 
     print("OpenReview API to JSONL Extractor")
     print("-" * 40)

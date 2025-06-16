@@ -9,10 +9,10 @@ MIN_PARTS_COUNT = 3
 
 def get_sinfo():
     result = subprocess.run(  # noqa: S603
-        ["sinfo", "-lNe"],
+        ["sinfo", "-lNe"],  # noqa: S607
         capture_output=True,
         text=True,
-        check=True,  # noqa: S607
+        check=True,
     )
     stdout = result.stdout
     lines = stdout.strip().split("\n")
