@@ -26,7 +26,6 @@ build-backend = "hatchling.build"
 
 [dependency-groups]
 dev = [
-    "pytest>=8.3.4",
     "ruff>=0.9.6",
     "mypy>=1.16.0",
     "tomlkit>=0.12.0",
@@ -46,7 +45,6 @@ test-ml = [
 all = [
     {include-group = "dev"},
     {include-group = "test"},
-    {include-group = "test-ml"},
 ]
 
 [tool.ruff]
@@ -109,7 +107,6 @@ extend-select = [
     "C90",
     "D",
     "DTZ",
-    "DOC",
     "FA",
     "PLW",
     "PLE",
@@ -135,8 +132,6 @@ ignore = [
     "NPY002", # don't use np.random.seed, I don't trust myself to remember
     "S101",
     "ANN001",
-    "ANN101",
-    "ANN102",
     "ANN201",
     "D100",
     "D103",
@@ -159,9 +154,10 @@ ignore-decorators = ["typing.overload", "typing.override"]
 "scripts/**/*.py" = [
     "T201",     # print() is fine in scripts
 ]
-
-[tool.ruff.lint.extend-ignore]
-"*_notebook.py" = ["E402", "F401"]  # Import order/unused imports OK
+"*_notebook.py" = [
+    "E402", # Import order OK in notebooks
+    "F401", # Unused imports OK in notebooks
+]  
 
 [tool.ruff.lint.mccabe]
 max-complexity = 15  # Higher threshold for ML
@@ -231,10 +227,6 @@ markers = [
     "serial: marks tests that must run serially",
     "integration: marks integration tests",
 ]
-
-# Coverage integration
-plugins = ["pytest-cov"]
-
 
 [tool.coverage.report]
 exclude_lines = [

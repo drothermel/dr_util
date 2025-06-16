@@ -1,17 +1,24 @@
 from dataclasses import MISSING, fields
+from typing import Any, TypeVar
+
+T = TypeVar("T")
 
 
-def lenient_validate(cls):
-    """
-    A decorator that wraps a dataclass __init__ so that extra keyword arguments
-    are silently ignored.
+def lenient_validate(cls: type[T]) -> type[T]:
+    """A decorator that wraps a dataclass __init__ to ignore extra keyword arguments.
+
+    Args:
+        cls: The dataclass to wrap.
+
+    Returns:
+        The wrapped dataclass.
     """
     original_init = cls.__init__
 
     # Collect the field names defined in the dataclass.
     valid_field_names = {f.name for f in fields(cls)}
 
-    def __init__(self, *args, **kwargs):  # noqa: N807
+    def __init__(self, *args: Any, **kwargs: Any) -> None:  # noqa: N807, ANN401
         self.missing_or_invalid_keys = set()
 
         # Drop extra keys and add missing keys

@@ -1,6 +1,7 @@
 import logging
 from enum import Enum
 from functools import singledispatchmethod
+from typing import Any, Union
 
 import jsonlines
 from omegaconf import DictConfig, OmegaConf
@@ -13,21 +14,28 @@ import dr_util.print_utils as pu
 
 
 class LoggerType(Enum):
+    """Enum for different logger types."""
+
     HYDRA = "hydra"
     JSON = "json"
 
 
-def create_logger(cfg, logger_type):
+def create_logger(
+    cfg: DictConfig, logger_type: str
+) -> Union["HydraLogger", "JsonLogger"]:
     match logger_type:
         case LoggerType.HYDRA.value:
             return HydraLogger(cfg)
         case LoggerType.JSON.value:
             return JsonLogger(cfg)
-    assert False, f">> Unknown logger type: {logger_type}"  # noqa
+    assert False, f">> Unknown logger type: {logger_type}"
 
 
 class HydraLogger:
-    def __init__(self, cfg):
+    """Logger that outputs to Hydra's logging system."""
+
+    def __init__(self, cfg: DictConfig) -> None:
+        """Initialize HydraLogger."""
         # Hydra sets up the logging cfg at start of run
         self.type = LoggerType.HYDRA
         self.cfg = cfg
@@ -36,18 +44,19 @@ class HydraLogger:
 
     @singledispatchmethod
     def log(self, value):
+        """Log a value using the appropriate logging method."""
         logging.info(str(value))
 
     @log.register(str)
-    def _(self, value):
+    def _(self, value) -> None:
         logging.info(value)
 
     @log.register(DictConfig)
-    def _(self, value):
+    def _(self, value) -> None:
         pu.log_cfg_str(value)
 
     @log.register(list)
-    def _(self, value):
+    def _(self, value) -> None:
         if len(value) > 0 and all(isinstance(v, str) for v in value):
             # Assume its a block of text, print directly as such
             # Extra newlines to avoid indent mismatch
@@ -56,7 +65,7 @@ class HydraLogger:
             logging.info(str(value))
 
     @log.register(dict)
-    def _(self, value):
+    def _(self, value) -> None:
         if self.pretty_log_dict:
             dict_str = pu.get_dict_str(value, indent=2)
             logging.info(dict_str)
@@ -65,7 +74,10 @@ class HydraLogger:
 
 
 class JsonLogger:
-    def __init__(self, cfg):
+    """Logger that outputs to JSON lines file."""
+
+    def __init__(self, cfg: DictConfig) -> None:
+        """Initialize JsonLogger."""
         self.type = LoggerType.JSON
         self.cfg = cfg
 
@@ -74,7 +86,7 @@ class JsonLogger:
         self.writer = None
         try:
             self.writer = jsonlines.open(self.path, "a")
-        except:  # noqa
+        except OSError:
             logging.warning(">> Could not open jsonlines log file")
 
         logging.info(">> Initialize JSON Logger")
@@ -82,16 +94,17 @@ class JsonLogger:
 
     @singledispatchmethod
     def log(self, value):
+        """Log a value using singledispatch based on type."""
         if self.writer is not None:
             self.writer.write({"type": type(value).__name__, "value": value})
 
     @log.register(dict)
-    def _(self, value):
+    def _(self, value) -> None:
         if self.writer is not None:
             self.writer.write(value)
 
     @log.register(DictConfig)
-    def _(self, value):
+    def _(self, value) -> None:
         if self.writer is not None:
             resolved_val = OmegaConf.to_container(value, resolve=True)
             self.writer.write({"type": "dict_config", "value": resolved_val})
@@ -105,28 +118,30 @@ BATCH_KEY = "batch_size"
 
 
 class MetricType(Enum):
+    """Enumeration of supported metric aggregation types."""
+
     INT = "int"
     LIST = "list"
     BATCH_WEIGHTED_AVG_LIST = "batch_weighted_avg_list"
 
 
-def add_sum(data, key, val):
+def add_sum(data: dict[str, Any], key: str, val: Any) -> None:  # noqa: ANN401
     data[key] += val
 
 
-def add_list(data, key, val):
+def add_list(data: dict[str, Any], key: str, val: Any) -> None:  # noqa: ANN401
     data[key].append(val)
 
 
-def agg_passthrough(data, key):
+def agg_passthrough(data: dict[str, Any], key: str) -> Any:  # noqa: ANN401
     return data[key]
 
 
-def agg_none(data, key):  # noqa: ARG001
+def agg_none(data: dict[str, Any], key: str) -> None:  # noqa: ARG001
     return None
 
 
-def agg_batch_weighted_list_avg(data, key):
+def agg_batch_weighted_list_avg(data: dict[str, Any], key: str) -> float:
     assert BATCH_KEY in data
     weighted_sum = sum(
         [data[key][i] * data[BATCH_KEY][i] for i in range(len(data[key]))]
@@ -136,7 +151,21 @@ def agg_batch_weighted_list_avg(data, key):
 
 
 class MetricsSubgroup:
-    def __init__(self, cfg, name="", metrics=None):
+    """Handles metrics collection for a specific group (e.g., train, val)."""
+
+    def __init__(
+        self,
+        cfg: DictConfig,
+        name: str = "",
+        metrics: Any | None = None,  # noqa: ANN401
+    ) -> None:
+        """Initialize MetricsSubgroup.
+
+        Args:
+            cfg: Configuration object containing metrics settings.
+            name: Name of the metrics group.
+            metrics: Optional metrics configuration.
+        """
         self.name = name
         self.metrics = metrics
         self.data_structure = cfg.metrics.init
@@ -146,7 +175,7 @@ class MetricsSubgroup:
 
         self._init_data()
 
-    def _init_data(self):
+    def _init_data(self) -> None:
         if self.data_structure is None:
             return
 
@@ -165,29 +194,35 @@ class MetricsSubgroup:
                     self.add_fxns[key] = add_list
                     self.agg_fxns[key] = agg_batch_weighted_list_avg
 
-    def _add_tuple(self, key, val):
+    def _add_tuple(self, key: str, val: Any) -> None:  # noqa: ANN401
         assert key in self.data, f">> Invalid Key: {key}"
         if val is None:
             return
         self.add_fxns[key](self.data, key, val)
 
     @singledispatchmethod
-    def add(self, data, ns=1):  # noqa: ARG002 (unused args)
-        assert False, f">> Unexpected data type: {type(data)}"  # noqa
+    def add(self, data: Any, ns: int = 1) -> None:  # noqa: ARG002, ANN401
+        """Add data to metrics collection - base method for single dispatch."""
+        assert False, f">> Unexpected data type: {type(data)}"
 
     @add.register(tuple)
-    def _(self, data, ns=1):
+    def _(self, data: tuple, ns: int = 1) -> None:
         assert len(data) == len(("key", "val"))
         self._add_tuple(*data)
         self._add_tuple(BATCH_KEY, ns)
 
     @add.register(dict)
-    def _(self, data, ns=1):
+    def _(self, data: dict[str, Any], ns: int = 1) -> None:
         for key, val in data.items():
             self._add_tuple(key, val)
         self._add_tuple(BATCH_KEY, ns)
 
-    def agg(self):
+    def agg(self) -> dict[str, Any]:
+        """Aggregate collected metrics data.
+
+        Returns:
+            Dictionary of aggregated metrics.
+        """
         agg_data = {}
         for key in self.data:
             agg_val = self.agg_fxns[key](self.data, key)
@@ -197,7 +232,14 @@ class MetricsSubgroup:
 
 
 class Metrics:
-    def __init__(self, cfg):
+    """Main metrics collection and logging system."""
+
+    def __init__(self, cfg: DictConfig) -> None:
+        """Initialize Metrics system.
+
+        Args:
+            cfg: Configuration object containing metrics and logging settings.
+        """
         self.cfg = cfg
         self.group_names = ["train", "val"]
 
@@ -205,21 +247,51 @@ class Metrics:
         self.groups = {name: MetricsSubgroup(cfg, name) for name in self.group_names}
         self.loggers = [create_logger(cfg, lt) for lt in cfg.metrics.loggers]
 
-    def log(self, value):
+    def log(self, value: Any) -> None:  # noqa: ANN401
+        """Log a value to all configured loggers.
+
+        Args:
+            value: The value to log.
+        """
         for logger in self.loggers:
             logger.log(value)
 
-    def train(self, data, ns=1):
+    def train(self, data: tuple | dict[str, Any], ns: int = 1) -> None:
+        """Add training data to metrics.
+
+        Args:
+            data: Training data as tuple (key, value) or dict.
+            ns: Number of samples (batch size).
+        """
         self.groups["train"].add(data, ns=ns)
 
-    def val(self, data, ns=1):
+    def val(self, data: tuple | dict[str, Any], ns: int = 1) -> None:
+        """Add validation data to metrics.
+
+        Args:
+            data: Validation data as tuple (key, value) or dict.
+            ns: Number of samples (batch size).
+        """
         self.groups["val"].add(data, ns=ns)
 
-    def agg(self, data_name):
+    def agg(self, data_name: str) -> dict[str, Any]:
+        """Aggregate metrics for a specific data group.
+
+        Args:
+            data_name: Name of the data group (e.g., 'train', 'val').
+
+        Returns:
+            Dictionary of aggregated metrics.
+        """
         assert data_name in self.groups, f">> Invalid Data Name: {data_name}"
         return self.groups[data_name].agg()
 
-    def agg_log(self, data_name):
+    def agg_log(self, data_name: str) -> None:
+        """Aggregate metrics and log the results.
+
+        Args:
+            data_name: Name of the data group to aggregate and log.
+        """
         log_dict = {
             "title": f"agg_{data_name}",
             "data_name": data_name,

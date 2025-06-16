@@ -8,7 +8,21 @@ import dr_util.determinism_utils as dtu
 
 
 class DummyDataset(torch.utils.data.Dataset):
-    def __init__(self, num_samples=20, image_size=(32, 32), num_classes=10):
+    """Dummy dataset for testing purposes."""
+
+    def __init__(
+        self,
+        num_samples: int = 20,
+        image_size: tuple[int, int] = (32, 32),
+        num_classes: int = 10,
+    ) -> None:
+        """Initialize dummy dataset.
+
+        Args:
+            num_samples: Number of samples to generate.
+            image_size: Size of images (height, width).
+            num_classes: Number of target classes.
+        """
         self.num_samples = num_samples
         self.image_size = image_size
         self.num_classes = num_classes
@@ -23,14 +37,16 @@ class DummyDataset(torch.utils.data.Dataset):
             self.data.append(pil_image)
             self.targets.append(np.random.randint(0, self.num_classes))
 
-    def __len__(self):
+    def __len__(self) -> int:
+        """Return the number of samples."""
         return self.num_samples
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: int) -> tuple[Image.Image, int]:
+        """Get a sample by index."""
         return self.data[index], self.targets[index]
 
 
-def test_data_split_vs_general_determinism():
+def test_data_split_vs_general_determinism() -> None:
     dataset = DummyDataset(num_samples=100)
 
     # Test changing data_split_seed

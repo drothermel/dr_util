@@ -3,6 +3,7 @@
 
 import logging
 import re
+from typing import NoReturn
 
 import requests
 from schema import And, Optional, Or, Schema
@@ -16,12 +17,15 @@ RETRY_ERROR = 503
 # Basically ruff wants me to make my own exceptions, do this one day
 # ruff: noqa: TRY002, TRY003
 class RoamBackendClient:
-    def __init__(self, token, graph):
+    """Client for interacting with the Roam Research backend API."""
+
+    def __init__(self, token, graph) -> None:
+        """Initialize the client with authentication token and graph name."""
         self.__token = token
         self.graph = graph
         self.__cache = {}
 
-    def _error_message(self, status_code, response_json):
+    def _error_message(self, status_code: int, response_json: str) -> NoReturn:
         if status_code == HTTP_500_ERROR:
             raise Exception("Error (HTTP 500): " + response_json)
         if status_code == HTTP_400_ERROR:
@@ -35,7 +39,9 @@ class RoamBackendClient:
             )
         raise Exception("Unknown Error: " + response_json)
 
-    def __make_request(self, path, method=None):
+    def __make_request(
+        self, path: str, method: str | None = None
+    ) -> tuple[str, str, dict[str, str]]:
         method = "POST" if method is None else method
         base_url = self.__cache.get(self.graph, "https://api.roamresearch.com")
         return (
@@ -49,8 +55,11 @@ class RoamBackendClient:
         )
 
     def call(self, path, method, body):
+        """Call the Roam API with given path, method, and body."""
         url, method, headers = self.__make_request(path, body, method)
-        resp = requests.post(url, headers=headers, json=body, allow_redirects=False)
+        resp = requests.post(
+            url, headers=headers, json=body, allow_redirects=False, timeout=30
+        )
         if resp.is_redirect or resp.is_permanent_redirect:
             if "Location" in resp.headers:
                 mtch = re.search(

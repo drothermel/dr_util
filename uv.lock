@@ -186,8 +186,6 @@ all = [
     { name = "pytest-benchmark" },
     { name = "pytest-cov" },
     { name = "pytest-mock" },
-    { name = "pytest-pytorch" },
-    { name = "pytest-randomly" },
     { name = "pytest-timeout" },
     { name = "pytest-xdist" },
     { name = "ruff" },
@@ -195,7 +193,6 @@ all = [
 ]
 dev = [
     { name = "mypy" },
-    { name = "pytest" },
     { name = "ruff" },
     { name = "tomlkit" },
 ]
@@ -229,13 +226,10 @@ requires-dist = [
 [package.metadata.requires-dev]
 all = [
     { name = "mypy", specifier = ">=1.16.0" },
-    { name = "pytest", specifier = ">=8.3.4" },
     { name = "pytest", specifier = ">=8.4.0" },
     { name = "pytest-benchmark", specifier = ">=4.0" },
     { name = "pytest-cov", specifier = ">=4.0" },
     { name = "pytest-mock", specifier = ">=3.0" },
-    { name = "pytest-pytorch", specifier = ">=0.2" },
-    { name = "pytest-randomly", specifier = ">=3.0" },
     { name = "pytest-timeout", specifier = ">=2.0" },
     { name = "pytest-xdist", specifier = ">=3.0" },
     { name = "ruff", specifier = ">=0.9.6" },
@@ -243,7 +237,6 @@ all = [
 ]
 dev = [
     { name = "mypy", specifier = ">=1.16.0" },
-    { name = "pytest", specifier = ">=8.3.4" },
     { name = "ruff", specifier = ">=0.9.6" },
     { name = "tomlkit", specifier = ">=0.12.0" },
 ]
