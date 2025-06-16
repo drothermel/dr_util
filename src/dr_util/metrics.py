@@ -44,6 +44,7 @@ class HydraLogger:
 
     @singledispatchmethod
     def log(self, value):
+        """Log a value using the appropriate logging method."""
         logging.info(str(value))
 
     @log.register(str)

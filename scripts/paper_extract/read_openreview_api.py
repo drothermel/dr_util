@@ -209,8 +209,7 @@ def fetch_and_save_data(api_base_url, output_file_handle, limit_per_request):
          )
 
 def remove_pagination_params(url_string):
-    """Removes 'limit' and 'offset' query parameters from a URL string.
-    """
+    """Removes 'limit' and 'offset' query parameters from a URL string."""
     parsed_url = urlparse(url_string)
     query_params = parse_qs(parsed_url.query)
 
@@ -230,7 +229,9 @@ def remove_pagination_params(url_string):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="OpenReview API to JSONL Extractor. Fetches paginated 'notes' data.",
+        description=(
+            "OpenReview API to JSONL Extractor. Fetches paginated 'notes' data."
+        ),
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
@@ -246,7 +247,9 @@ if __name__ == "__main__":
     parser.add_argument(
         "--overwrite",
         action="store_true",
-        help=("Overwrite the output file if it exists, otherwise append (or create if new)."),
+        help=(
+            "Overwrite the output file if it exists, otherwise append (or create if new)."
+        ),
     )
 
     args = parser.parse_args()

@@ -50,21 +50,25 @@ def get_cifar_dataset(
 
 class TransformedSubset(torch.utils.data.Dataset):
     """A wrapper for a torch.utils.data.Subset that applies a transform.
+    
     This is useful because Subsets themselves don't have a transform attribute
     that can be set after creation.
     """
 
     def __init__(self, subset, transform=None) -> None:
+        """Initialize with a subset and optional transform."""
         self.subset = subset
         self.transform = transform
 
     def __getitem__(self, index) -> tuple:
+        """Get item at index with optional transform applied."""
         x, y = self.subset[index]  # Subset returns data from the original dataset
         if self.transform:
             x = self.transform(x)
         return x, y
 
     def __len__(self) -> int:
+        """Return the length of the subset."""
         return len(self.subset)
 
 

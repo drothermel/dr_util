@@ -6,6 +6,7 @@ import torch
 
 def seed_worker(worker_id):  # noqa: ARG001
     """Seeds a DataLoader worker.
+    
     This function is intended to be used as the worker_init_fn in a DataLoader.
     It ensures that each worker process has a unique and deterministic seed based
     on the main process's initial seed.

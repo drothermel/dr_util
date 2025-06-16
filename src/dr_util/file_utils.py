@@ -178,8 +178,11 @@ def loadjsonl(pl_path: Path) -> list[Any]:
 
 
 def loadpkl(pl_path: Path) -> Any:  # noqa: ANN401, S301
-    """Load pickle file. WARNING: Only use with trusted data - pickle can execute arbitrary code."""
-    return pickle.load(pl_path.open(mode="rb"))
+    """Load pickle file.
+    
+    WARNING: Only use with trusted data - pickle can execute arbitrary code.
+    """
+    return pickle.load(pl_path.open(mode="rb"))  # noqa: S301
 
 
 def loadomega(pl_path: Path) -> Any:  # noqa: ANN401
