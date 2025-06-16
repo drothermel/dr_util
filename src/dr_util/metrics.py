@@ -110,6 +110,8 @@ BATCH_KEY = "batch_size"
 
 
 class MetricType(Enum):
+    """Enumeration of supported metric aggregation types."""
+
     INT = "int"
     LIST = "list"
     BATCH_WEIGHTED_AVG_LIST = "batch_weighted_avg_list"
@@ -187,6 +189,7 @@ class MetricsSubgroup:
 
     @singledispatchmethod
     def add(self, data: Any, ns: int = 1) -> None:  # noqa: ARG002 (unused args)
+        """Add data to metrics collection - base method for single dispatch."""
         assert False, f">> Unexpected data type: {type(data)}"
 
     @add.register(tuple)
@@ -203,7 +206,7 @@ class MetricsSubgroup:
 
     def agg(self) -> dict[str, Any]:
         """Aggregate collected metrics data.
-        
+
         Returns:
             Dictionary of aggregated metrics.
         """
