@@ -159,9 +159,10 @@ ignore-decorators = ["typing.overload", "typing.override"]
 "scripts/**/*.py" = [
     "T201",     # print() is fine in scripts
 ]
-
-[tool.ruff.lint.extend-ignore]
-"*_notebook.py" = ["E402", "F401"]  # Import order/unused imports OK
+"*_notebook.py" = [
+    "E402", # Import order OK in notebooks
+    "F401", # Unused imports OK in notebooks
+]  
 
 [tool.ruff.lint.mccabe]
 max-complexity = 15  # Higher threshold for ML
