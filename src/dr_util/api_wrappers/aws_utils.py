@@ -13,6 +13,7 @@ from botocore.handlers import disable_signing
 
 class S3Manager:
     """High-level abstractions for working with S3."""
+
     def __init__(self, boto3_session: boto3.Session | None = None) -> None:
         """Initialize S3Manager.
 

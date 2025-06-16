@@ -18,6 +18,7 @@ RETRY_ERROR = 503
 # ruff: noqa: TRY002, TRY003
 class RoamBackendClient:
     """Client for interacting with the Roam Research backend API."""
+
     def __init__(self, token, graph) -> None:
         """Initialize the client with authentication token and graph name."""
         self.__token = token

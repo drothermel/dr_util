@@ -22,8 +22,12 @@ REQUEST_TIMEOUT = 15  # second
 DELAY_BETWEEN_VOLUMES = 2  # seconds, to be polite to the server
 HTTP_NOT_FOUND = 404  # HTTP status code for not found
 FIELDS_TO_DROP = [
-    "title_detail", "summary_detail", "published_parsed", "updated_parsed"
+    "title_detail",
+    "summary_detail",
+    "published_parsed",
+    "updated_parsed",
 ]  # Added updated_parsed as it's similar
+
 
 # --- Helper Function for JSON Serialization ---
 def json_converter(o):
@@ -39,7 +43,9 @@ def json_converter(o):
     msg = f"Object of type {o.__class__.__name__} is not JSON serializable"
     raise TypeError(msg)
 
+
 # --- Helper Functions for Conference Metadata Extraction ---
+
 
 def fetch_rss_feed(volume_number):
     """Fetch RSS feed for a given volume number.
@@ -55,9 +61,7 @@ def fetch_rss_feed(volume_number):
 
     try:
         headers = {
-            "User-Agent": (
-                f"PMLRMultiVolumeExtractor/1.1 (Volume {volume_number})"
-            )
+            "User-Agent": (f"PMLRMultiVolumeExtractor/1.1 (Volume {volume_number})")
         }
         response = requests.get(feed_url, headers=headers, timeout=REQUEST_TIMEOUT)
 
@@ -89,6 +93,7 @@ def extract_year_from_published(feed_meta):
         return "N/A"
 
     import contextlib
+
     with contextlib.suppress(AttributeError):
         return str(feed_meta.published_parsed.tm_year)
     return "N/A"
@@ -233,7 +238,9 @@ def process_entries_to_jsonl(
             output_file_handle.write(json_string + "\n")
             entries_processed_count += 1
         except (TypeError, ValueError, KeyError) as e:
-            print(f"    Error serializing entry {i+1} for Volume {volume_number}: {e}")
+            print(
+                f"    Error serializing entry {i + 1} for Volume {volume_number}: {e}"
+            )
 
     return entries_processed_count
 
@@ -278,6 +285,7 @@ def process_volume_to_jsonl(volume_number, output_file_handle):
     )
     return entries_processed_count
 
+
 # --- Main Execution ---
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -285,24 +293,26 @@ if __name__ == "__main__":
             "PMLR Multi-Volume RSS to JSONL Extractor "
             "(with Conference Metadata & Field Dropping)"
         ),
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter  # Shows defaults
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,  # Shows defaults
     )
     parser.add_argument(
-        "-s", "--start-volume",
+        "-s",
+        "--start-volume",
         type=int,
         default=230,
         help="The first PMLR volume number to process.",
     )
     parser.add_argument(
-        "-e", "--end-volume",
+        "-e",
+        "--end-volume",
         type=int,
         default=232,
         help="The last PMLR volume number to process",
     )
     parser.add_argument(
         "--overwrite",
-        action="store_true", # Becomes True if flag is present
-        help="Overwrite the output file if it exists, otherwise append."
+        action="store_true",  # Becomes True if flag is present
+        help="Overwrite the output file if it exists, otherwise append.",
     )
 
     args = parser.parse_args()
@@ -324,15 +334,18 @@ if __name__ == "__main__":
     print(f"Output will be saved to: {OUTPUT_FILENAME}")
     print(f"Fields to be dropped from each entry: {', '.join(FIELDS_TO_DROP)}")
 
-
     file_mode = "a"
     output_path = Path(OUTPUT_FILENAME)
     if output_path.exists():
         while True:
-            choice = input(
-                f"File '{OUTPUT_FILENAME}' already exists. "
-                "(A)ppend, (O)verwrite, or (Q)uit? [A/O/Q]: "
-            ).strip().lower()
+            choice = (
+                input(
+                    f"File '{OUTPUT_FILENAME}' already exists. "
+                    "(A)ppend, (O)verwrite, or (Q)uit? [A/O/Q]: "
+                )
+                .strip()
+                .lower()
+            )
             if choice == "o":
                 file_mode = "w"
                 print(f"Output file '{OUTPUT_FILENAME}' will be overwritten.")

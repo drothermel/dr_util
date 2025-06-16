@@ -8,8 +8,11 @@ MIN_PARTS_COUNT = 3
 
 
 def get_sinfo():
-    result = subprocess.run(
-        ["sinfo", "-lNe"], capture_output=True, text=True, check=True
+    result = subprocess.run(  # noqa: S603
+        ["sinfo", "-lNe"],
+        capture_output=True,
+        text=True,
+        check=True,  # noqa: S607
     )
     stdout = result.stdout
     lines = stdout.strip().split("\n")
@@ -17,6 +20,7 @@ def get_sinfo():
     if len(lines) <= MIN_HEADER_LINES:
         return []
     return lines[MIN_HEADER_LINES:]
+
 
 def parse_sinfo(sinfo_lines, node_parser):
     node_info = defaultdict(lambda: {"nodes": set(), "partitions": set()})
@@ -37,6 +41,7 @@ def parse_sinfo(sinfo_lines, node_parser):
         partition_info[partition].add(node_list)
     return node_info, partition_info
 
+
 def print_idle_gpu_by_node_type(node_info):
     print("Idle GPU Node Information (Grouped by Node Type):")
     if not node_info:
@@ -53,6 +58,7 @@ def print_idle_gpu_by_node_type(node_info):
                 f"  {node_type}: {node_count} unique node(s) "
                 f"(Associated Partitions: {partitions_str})"
             )
+
 
 def print_idle_gpu_by_partition_type(partition_info, node_parser):
     print("\nIdle GPU Node Information (Grouped by Partition):")
@@ -79,7 +85,6 @@ def print_idle_gpu_by_partition_type(partition_info, node_parser):
                 f"  {partition_name}: {node_count} unique node(s) "
                 f"(Node Types: {node_types_str})"
             )
-
 
 
 def get_idle_gpu_node_info():

@@ -154,7 +154,10 @@ class MetricsSubgroup:
     """Handles metrics collection for a specific group (e.g., train, val)."""
 
     def __init__(
-        self, cfg: DictConfig, name: str = "", metrics: Any | None = None  # noqa: ANN401
+        self,
+        cfg: DictConfig,
+        name: str = "",
+        metrics: Any | None = None,  # noqa: ANN401
     ) -> None:
         """Initialize MetricsSubgroup.
 

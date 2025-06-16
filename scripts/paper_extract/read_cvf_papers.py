@@ -42,7 +42,7 @@ def extract_paper_info_from_cvf(html_content, page_url):
             "supplemental_link": None,
             "arxiv_link": None,
             "bibtex": None,
-            "source_url": page_url # Keep track of where this data came from
+            "source_url": page_url,  # Keep track of where this data came from
         }
 
         # --- Extract Title and HTML link ---
@@ -56,7 +56,7 @@ def extract_paper_info_from_cvf(html_content, page_url):
                 f"Warning: Could not find title anchor for a <dt class='ptitle'> "
                 f"element. Content: {dt_title.get_text(strip=True)}"
             )
-            continue # Skip this entry if title can't be found
+            continue  # Skip this entry if title can't be found
 
         # --- Extract Authors ---
         # Authors are in the first <dd> immediately following the <dt class="ptitle">
@@ -102,7 +102,7 @@ def extract_paper_info_from_cvf(html_content, page_url):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Scrape paper information from a CVF Open Access conference page.",
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
         "--url-name",
@@ -111,13 +111,13 @@ if __name__ == "__main__":
     parser.add_argument(
         "--overwrite",
         action="store_true",
-        help="Overwrite the output file if it exists, otherwise append (or create)."
+        help="Overwrite the output file if it exists, otherwise append (or create).",
     )
     parser.add_argument(
         "--timeout",
         type=int,
         default=30,
-        help="Timeout in seconds for the HTTP request."
+        help="Timeout in seconds for the HTTP request.",
     )
 
     args = parser.parse_args()

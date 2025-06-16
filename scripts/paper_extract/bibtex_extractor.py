@@ -144,7 +144,7 @@ def _parse_with_simple_mode(content: str) -> BibDatabase:
     parser = BibTexParser(
         common_strings=True,
         ignore_nonstandard_types=True,  # Be lenient with @type names
-        homogenize_fields=False  # Do not change field keys during initial parse
+        homogenize_fields=False,  # Do not change field keys during initial parse
     )
 
     try:
@@ -198,10 +198,7 @@ def _parse_with_default_mode(content: str) -> BibDatabase:
 
 
 def _handle_entry_error(
-    original_entry: dict[str, Any],
-    entry_idx: int,
-    error: Exception,
-    error_type: str
+    original_entry: dict[str, Any], entry_idx: int, error: Exception, error_type: str
 ) -> None:
     """Handle errors that occur during entry processing.
 
@@ -213,8 +210,10 @@ def _handle_entry_error(
     """
     problematic_id_dict = {k.lower(): v for k, v in original_entry.items()}
     problematic_id = problematic_id_dict.get("id", original_entry.get("ID", "N/A"))
-    print(f"WARNING: {error_type} during customization of entry "
-          f"ID '{problematic_id}' (index {entry_idx}): {error}")
+    print(
+        f"WARNING: {error_type} during customization of entry "
+        f"ID '{problematic_id}' (index {entry_idx}): {error}"
+    )
     if error_type == "AttributeError":
         print(f"  Problematic entry data (before error): {original_entry}")
 
@@ -225,7 +224,7 @@ def _write_entries_to_jsonl(
     parser_mode: str,
     parser: BibTexParser,
     *,
-    overwrite_flag: bool
+    overwrite_flag: bool,
 ) -> int:
     """Write processed entries to JSONL file.
 
@@ -249,8 +248,9 @@ def _write_entries_to_jsonl(
         for entry_idx, entry in enumerate(entries):
             try:
                 # Ensure keys are lowercase for extract_info_from_bib_entry
-                if (parser_mode == "simple" and
-                    not getattr(parser, "homogenize_fields", False)):
+                if parser_mode == "simple" and not getattr(
+                    parser, "homogenize_fields", False
+                ):
                     normalized_entry = {k.lower(): v for k, v in entry.items()}
                 else:
                     normalized_entry = entry
@@ -266,8 +266,10 @@ def _write_entries_to_jsonl(
                 problematic_id = "N/A"
                 if isinstance(entry, dict):
                     problematic_id = entry.get("id", entry.get("ID", "N/A"))
-                print(f"Error writing entry ID '{problematic_id}' "
-                      f"(index {entry_idx}) to JSON: {e}")
+                print(
+                    f"Error writing entry ID '{problematic_id}' "
+                    f"(index {entry_idx}) to JSON: {e}"
+                )
 
     return count
 
@@ -278,7 +280,7 @@ def process_bibtex_file(
     parser_mode: str,
     *,
     is_gzipped: bool,
-    overwrite_flag: bool
+    overwrite_flag: bool,
 ) -> int:
     """Read a BibTeX file, process entries, and write to JSONL.
 
@@ -319,8 +321,10 @@ def process_bibtex_file(
             )
             return 0
 
-        print(f"Found {len(bib_database.entries)} entries. "
-              f"Processing and writing to {output_jsonl_path}...")
+        print(
+            f"Found {len(bib_database.entries)} entries. "
+            f"Processing and writing to {output_jsonl_path}..."
+        )
 
         # Write entries to JSONL
         parser = BibTexParser()  # Create parser object for _write_entries_to_jsonl
@@ -329,11 +333,11 @@ def process_bibtex_file(
             output_jsonl_path,
             parser_mode,
             parser,
-            overwrite_flag=overwrite_flag
+            overwrite_flag=overwrite_flag,
         )
 
         print(
-f"\nSuccessfully processed and wrote {count} entries to "
+            f"\nSuccessfully processed and wrote {count} entries to "
             f"{output_jsonl_path}."
         )
     except FileNotFoundError:
@@ -356,15 +360,15 @@ if __name__ == "__main__":
         description=(
             "Parse a BibTeX file (gzipped or plain) and output entries to a JSONL file."
         ),
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
         "--overwrite",
         action="store_true",
         help=(
-"Overwrite the output file if it exists, otherwise append "
+            "Overwrite the output file if it exists, otherwise append "
             "(or create if new)."
-        )
+        ),
     )
 
     args = parser.parse_args()
@@ -393,7 +397,7 @@ if __name__ == "__main__":
         output_file,
         "simple",
         is_gzipped=is_gzipped_input,
-        overwrite_flag=False
+        overwrite_flag=False,
     )
 
     print("----------------------")

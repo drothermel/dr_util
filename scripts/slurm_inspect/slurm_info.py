@@ -12,7 +12,8 @@ def see_qos():
     except subprocess.CalledProcessError as e:
         print(f"Error running command: {e}")
         print(f"Stderr: {e.stderr}")
-    print("-"*30)
+    print("-" * 30)
+
 
 def see_jobs_in_qos(qos_name):
     """Show jobs associated with a specific QOS.
@@ -37,7 +38,8 @@ def see_jobs_in_qos(qos_name):
     except subprocess.CalledProcessError as e:
         print(f"Error running command: {e}")
         print(f"Stderr: {e.stderr}")
-    print("-"*30)
+    print("-" * 30)
+
 
 def see_partition_info(partition):
     """Show information about a specific partition.
@@ -61,7 +63,8 @@ def see_partition_info(partition):
     except subprocess.CalledProcessError as e:
         print(f"Error running command: {e}")
         print(f"Stderr: {e.stderr}")
-    print("-"*30)
+    print("-" * 30)
+
 
 if __name__ == "__main__":
     see_qos()

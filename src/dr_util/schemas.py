@@ -7,6 +7,7 @@ from dr_util.schema_utils import lenient_validate
 
 class ConfigType(Enum):
     """Enumeration of available configuration types."""
+
     USES_METRICS = "uses_metrics"
 
 
@@ -26,6 +27,7 @@ def get_schema(config_type: str) -> type[Any] | None:
 @dataclass
 class MetricsInitConfig:
     """Configuration for metrics initialization."""
+
     batch_size: str = "list"
 
 
@@ -33,6 +35,7 @@ class MetricsInitConfig:
 @dataclass
 class MetricsConfig:
     """Configuration for metrics collection and logging."""
+
     loggers: list = MISSING
     init: type = MetricsInitConfig
 
@@ -46,4 +49,5 @@ class MetricsConfig:
 @dataclass
 class UsingMetricsConfig:
     """Configuration for systems that use metrics."""
+
     metrics: type = MetricsConfig

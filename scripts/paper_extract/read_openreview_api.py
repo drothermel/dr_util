@@ -22,34 +22,30 @@ OPENREVIEW_API_ENDPOINTS = {
     "iclr_2025_spotlight": "https://api2.openreview.net/notes?content.venue=ICLR%202025%20Spotlight&details=replyCount%2Cpresentation%2Cwritable&domain=ICLR.cc%2F2025%2FConference&limit=25&offset=0",
     "iclr_2025_poster": "https://api2.openreview.net/notes?content.venue=ICLR%202025%20Poster&details=replyCount%2Cpresentation%2Cwritable&domain=ICLR.cc%2F2025%2FConference&limit=25&offset=0",
     "iclr_2025_blogposts": "https://api2.openreview.net/notes?content.venue=ICLR%202025%20Blogpost%20Track&details=replyCount%2Cpresentation%2Cwritable&domain=ICLR.cc%2F2025%2FBlogPosts&invitation=ICLR.cc%2F2025%2FBlogPosts%2F-%2FSubmission&limit=25&offset=0",
-
     # ICLR 2024
     "iclr_2024_oral": "https://api2.openreview.net/notes?content.venue=ICLR%202024%20oral&details=replyCount%2Cpresentation%2Cwritable&domain=ICLR.cc%2F2024%2FConference&limit=25&offset=0",
     "iclr_2024_spotlight": "https://api2.openreview.net/notes?content.venue=ICLR%202024%20spotlight&details=replyCount%2Cpresentation%2Cwritable&domain=ICLR.cc%2F2024%2FConference&limit=25&offset=0",
     "iclr_2024_poster": "https://api2.openreview.net/notes?content.venue=ICLR%202024%20poster&details=replyCount%2Cpresentation%2Cwritable&domain=ICLR.cc%2F2024%2FConference&limit=25&offset=0",
     "iclr_2024_blogposts": "https://api2.openreview.net/notes?content.venue=BT%40ICLR2024&details=replyCount%2Cpresentation%2Cwritable&domain=ICLR.cc%2F2024%2FBlogPosts&limit=25&offset=0",
-
     # ICLR 2023
     # Note: The venue names for 2023 are more specific (e.g., "notable top 5%"
     "iclr_2023_notable_top_5_percent": "https://api.openreview.net/notes?content.venue=ICLR+2023+notable+top+5%25&details=replyCount&offset=0&limit=25&invitation=ICLR.cc%2F2023%2FConference%2F-%2FBlind_Submission",
     "iclr_2023_poster": "https://api.openreview.net/notes?content.venue=ICLR+2023+poster&details=replyCount&offset=0&limit=25&invitation=ICLR.cc%2F2023%2FConference%2F-%2FBlind_Submission",
     "iclr_2023_notable_top_25_percent": "https://api.openreview.net/notes?content.venue=ICLR+2023+notable+top+25%25&details=replyCount&offset=0&limit=25&invitation=ICLR.cc%2F2023%2FConference%2F-%2FBlind_Submission",
     "iclr_2023_blogposts": "https://api.openreview.net/notes?content.venue=Blogposts+%40+ICLR+2023&details=replyCount&offset=0&limit=25&invitation=ICLR.cc%2F2023%2FBlogPosts%2F-%2FBlind_Submission",
-
     # ICLR 2022
     "iclr_2022_spotlight": "https://api.openreview.net/notes?content.venue=ICLR+2022+Spotlight&details=replyCount&offset=0&limit=50&invitation=ICLR.cc%2F2022%2FConference%2F-%2FBlind_Submission",
     "iclr_2022_poster": "https://api.openreview.net/notes?content.venue=ICLR+2022+Poster&details=replyCount&offset=0&limit=50&invitation=ICLR.cc%2F2022%2FConference%2F-%2FBlind_Submission",
     "iclr_2022_oral": "https://api.openreview.net/notes?content.venue=ICLR+2022+Oral&details=replyCount&offset=0&limit=50&invitation=ICLR.cc%2F2022%2FConference%2F-%2FBlind_Submission",
-
     # ICLR 2021
     # For 2021 and 2020, the URLs are identical except for the offset,
     # indicating they point to the same base query.
     # We only need one entry for the base URL.
     "iclr_2021_conference_submissions": "https://api.openreview.net/notes?invitation=ICLR.cc%2F2021%2FConference%2F-%2FBlind_Submission&details=replyCount%2Cinvitation%2Coriginal%2CdirectReplies&limit=1000&offset=0",
-
     # ICLR 2020
     "iclr_2020_conference_submissions": "https://api.openreview.net/notes?invitation=ICLR.cc%2F2020%2FConference%2F-%2FBlind_Submission&details=replyCount%2Cinvitation%2Coriginal%2CdirectReplies&limit=1000&offset=0",
 }
+
 
 def extract_paper_data(note):
     """Extracts relevant information from a single 'note' object.
@@ -68,30 +64,31 @@ def extract_paper_data(note):
         "id": note.get("id"),
         "forum": note.get("forum"),
         "title": get_value(content, "title"),
-        "authors": get_value(content, "authors", []), # Expecting a list
-        "author_ids": get_value(content, "authorids", []), # Expecting a list
-        "keywords": get_value(content, "keywords", []), # Expecting a list
+        "authors": get_value(content, "authors", []),  # Expecting a list
+        "author_ids": get_value(content, "authorids", []),  # Expecting a list
+        "keywords": get_value(content, "keywords", []),  # Expecting a list
         "abstract": get_value(content, "abstract"),
         "venue": get_value(content, "venue"),
         "venue_id": get_value(content, "venueid"),
         "bibtex": get_value(content, "_bibtex"),
-        "blogpost_url": get_value(content, "blogpost_url"), # From example
+        "blogpost_url": get_value(content, "blogpost_url"),  # From example
         "pdf_url": get_value(content, "pdf"),  # Common field
-        "html_url": get_value(content, "html"), # Common field
-        "cdate": note.get("cdate"), # Creation date of the note itself
-        "mdate": note.get("mdate"), # Modification date
+        "html_url": get_value(content, "html"),  # Common field
+        "cdate": note.get("cdate"),  # Creation date of the note itself
+        "mdate": note.get("mdate"),  # Modification date
         "odate": note.get("odate"),  # Original submission date
-        "tcdate": note.get("tcdate"), # True creation date
-        "tmdate": note.get("tmdate"), # True modification date
-        "original_note_content": content  # Store whole content for analysis
+        "tcdate": note.get("tcdate"),  # True creation date
+        "tmdate": note.get("tmdate"),  # True modification date
+        "original_note_content": content,  # Store whole content for analysis
         # Add any other fields from 'note' or 'note.content' you need
     }
+
 
 def fetch_and_save_data(api_base_url, output_file_handle, limit_per_request):
     """Fetches all data from the paginated API and saves it."""
     current_offset = 0
     total_processed_count = 0
-    total_expected_count = None # Will be set by the first API call
+    total_expected_count = None  # Will be set by the first API call
 
     print(f"Starting data extraction from: {api_base_url}")
     print(f"Fetching {limit_per_request} items per request.")
@@ -106,9 +103,7 @@ def fetch_and_save_data(api_base_url, output_file_handle, limit_per_request):
         print(f"  Fetching: {paginated_url}")
 
         try:
-            headers = {
-                "User-Agent": "OpenReviewAPIExtractor/1.0"
-            }
+            headers = {"User-Agent": "OpenReviewAPIExtractor/1.0"}
             # Increased timeout for potentially larger responses
             response = requests.get(paginated_url, headers=headers, timeout=30)
             response.raise_for_status()  # Raise an exception for HTTP errors
@@ -116,7 +111,7 @@ def fetch_and_save_data(api_base_url, output_file_handle, limit_per_request):
             data = response.json()
             notes = data.get("notes", [])
 
-            if total_expected_count is None: # First call
+            if total_expected_count is None:  # First call
                 total_expected_count = data.get("count", 0)
                 if total_expected_count == 0 and not notes:
                     print("  API returned 0 total items and no notes. Exiting.")
@@ -126,14 +121,14 @@ def fetch_and_save_data(api_base_url, output_file_handle, limit_per_request):
             if not notes:
                 print("  No more notes returned by the API.")
                 if (
-            total_expected_count is not None
-            and total_processed_count < total_expected_count
-        ):
+                    total_expected_count is not None
+                    and total_processed_count < total_expected_count
+                ):
                     print(
-                f"  WARNING: Processed {total_processed_count} items, but API "
-                f"reported {total_expected_count}. There might be an issue or "
-                f"API limit."
-            )
+                        f"  WARNING: Processed {total_processed_count} items, but API "
+                        f"reported {total_expected_count}. There might be an issue or "
+                        f"API limit."
+                    )
                 break
 
             for note in notes:
@@ -171,18 +166,17 @@ def fetch_and_save_data(api_base_url, output_file_handle, limit_per_request):
             # Safety break if API keeps returning data without count or notes
             # list becomes empty unexpectedly
             if len(notes) < limit_per_request and total_expected_count is None:
-                 print(
-                     "  API returned fewer items than requested and total count "
-                     "is unknown. Assuming end of data."
-                 )
-                 break
-
+                print(
+                    "  API returned fewer items than requested and total count "
+                    "is unknown. Assuming end of data."
+                )
+                break
 
         except requests.exceptions.RequestException as e:
             print(f"  Error fetching data at offset {current_offset}: {e}")
             print("  Retrying in 5 seconds...")
-            time.sleep(5) # Wait a bit before retrying a failed request
-            continue # Retry the current offset
+            time.sleep(5)  # Wait a bit before retrying a failed request
+            continue  # Retry the current offset
         except json.JSONDecodeError as e:
             print(f"  Error decoding JSON response at offset {current_offset}: {e}")
             # Print beginning of problematic response
@@ -196,17 +190,17 @@ def fetch_and_save_data(api_base_url, output_file_handle, limit_per_request):
         time.sleep(DELAY_BETWEEN_REQUESTS)
 
     print(
-        f"\nFinished processing. Total items written to file: "
-        f"{total_processed_count}"
+        f"\nFinished processing. Total items written to file: {total_processed_count}"
     )
     if (
         total_expected_count is not None
         and total_processed_count != total_expected_count
     ):
-         print(
-             f"  Note: Final processed count ({total_processed_count}) "
-             f"does not match API's reported total ({total_expected_count})."
-         )
+        print(
+            f"  Note: Final processed count ({total_processed_count}) "
+            f"does not match API's reported total ({total_expected_count})."
+        )
+
 
 def remove_pagination_params(url_string):
     """Removes 'limit' and 'offset' query parameters from a URL string."""
@@ -222,8 +216,14 @@ def remove_pagination_params(url_string):
 
     # Reconstruct the URL
     return urlunparse(
-        (parsed_url.scheme, parsed_url.netloc, parsed_url.path,
-         parsed_url.params, new_query_string, parsed_url.fragment)
+        (
+            parsed_url.scheme,
+            parsed_url.netloc,
+            parsed_url.path,
+            parsed_url.params,
+            new_query_string,
+            parsed_url.fragment,
+        )
     )
 
 
@@ -242,7 +242,7 @@ if __name__ == "__main__":
         "--limit",
         type=int,
         default=100,
-        help="Number of items to fetch per API request."
+        help="Number of items to fetch per API request.",
     )
     parser.add_argument(
         "--overwrite",
@@ -261,10 +261,8 @@ if __name__ == "__main__":
         print(k, v)
 
     api_url = api_urls[args.api_name]
-    TRIAL =  0
-    output_file = (
-        f"../../../data/rss_paper_data/open_review_papers.{args.api_name}.t{TRIAL}.jsonl"
-    )
+    TRIAL = 0
+    output_file = f"../../../data/rss_paper_data/open_review_papers.{args.api_name}.t{TRIAL}.jsonl"
 
     print("OpenReview API to JSONL Extractor")
     print("-" * 40)
@@ -294,4 +292,3 @@ if __name__ == "__main__":
 
     print("-" * 40)
     print("Script finished.")
-
