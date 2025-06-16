@@ -26,6 +26,7 @@ FIELDS_TO_DROP = [
 # --- Helper Function for JSON Serialization ---
 def json_converter(o):
     """Converts objects that are not directly JSON serializable.
+
     Specifically handles time.struct_time from feedparser.
     """
     if isinstance(o, time.struct_time):
@@ -40,8 +41,9 @@ def json_converter(o):
 
 # --- Core Processing Function ---
 def process_volume_to_jsonl(volume_number, output_file_handle):
-    """Fetches, parses, extracts conference metadata, and writes entries
-    from a single volume's RSS feed to the output file.
+    """Fetches, parses, extracts conference metadata, and writes entries.
+
+    From a single volume's RSS feed to the output file.
 
     Args:
         volume_number (int): The PMLR volume number.
