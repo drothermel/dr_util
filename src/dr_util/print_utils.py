@@ -38,7 +38,7 @@ def print_dataclass(dc: Any) -> None:  # dataclass instance
 
 
 @singledispatch
-def cfg_to_loggable_lines(cfg: dict[str, Any] | DictConfig | Any) -> list[str]:
+def cfg_to_loggable_lines(cfg: dict[str, Any] | DictConfig | Any) -> list[str]:  # noqa: ANN401
     logging.warning(f">> Unexpected cfg type: {type(cfg)}")
     return [str(cfg)]  # default, just stringify
 
@@ -56,7 +56,7 @@ def _(cfg: DictConfig) -> list[str]:
     return cfg_str.strip("\n").split("\n")
 
 
-def get_cfg_str(cfg: dict[str, Any] | DictConfig | Any) -> str:
+def get_cfg_str(cfg: dict[str, Any] | DictConfig | Any) -> str:  # noqa: ANN401
     return "\n".join(
         [
             "\n",
@@ -68,5 +68,5 @@ def get_cfg_str(cfg: dict[str, Any] | DictConfig | Any) -> str:
     )
 
 
-def log_cfg_str(cfg: dict[str, Any] | DictConfig | Any) -> None:
+def log_cfg_str(cfg: dict[str, Any] | DictConfig | Any) -> None:  # noqa: ANN401
     logging.info(get_cfg_str(cfg))
