@@ -192,7 +192,7 @@ if __name__ == "__main__":
 
     except requests.exceptions.RequestException as e:
         print(f"Error fetching URL {url}: {e}")
-    except Exception as e:
+    except (OSError, ValueError, KeyError) as e:
         print(f"An unexpected error occurred: {e}")
 
     print("--------------------------")

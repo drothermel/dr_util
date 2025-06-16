@@ -58,7 +58,7 @@ def extract_paper_data(note):
     content = note.get("content", {})
 
     # Helper to safely get values from nested dictionaries
-    def get_value(data_dict, key, default=None):
+    def get_value(data_dict, key, default=None) -> Any:
         if isinstance(data_dict.get(key), dict):
             return data_dict.get(key, {}).get("value", default)
         return data_dict.get(key, default)
@@ -142,7 +142,7 @@ def fetch_and_save_data(api_base_url, output_file_handle, limit_per_request):
                     json_string = json.dumps(paper_data)
                     output_file_handle.write(json_string + "\n")
                     total_processed_count += 1
-                except Exception as e:
+                except (KeyError, TypeError, ValueError) as e:
                     print(f"    Error processing or serializing note ID {note.get('id', 'N/A')}: {e}")
 
             print(f"  Processed {len(notes)} notes in this batch. Total processed so far: {total_processed_count}")
@@ -250,7 +250,7 @@ if __name__ == "__main__":
     try:
         with open(output_file, file_mode, encoding="utf-8") as outfile:
             fetch_and_save_data(api_url, outfile, args.limit)
-    except Exception as e:
+    except (OSError, ValueError, KeyError) as e:
         print(f"An unexpected error occurred during script execution: {e}")
 
     print("-" * 40)

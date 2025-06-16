@@ -92,12 +92,12 @@ class JsonLogger:
             self.writer.write({"type": type(value).__name__, "value": value})
 
     @log.register(dict)
-    def _(self, value):
+    def _(self, value) -> None:
         if self.writer is not None:
             self.writer.write(value)
 
     @log.register(DictConfig)
-    def _(self, value):
+    def _(self, value) -> None:
         if self.writer is not None:
             resolved_val = OmegaConf.to_container(value, resolve=True)
             self.writer.write({"type": "dict_config", "value": resolved_val})
