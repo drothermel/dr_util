@@ -389,7 +389,11 @@ if __name__ == "__main__":
         print(f"Creating new output file '{output_file}'.")
 
     process_bibtex_file(
-        input_file, output_file, "simple", is_gzipped=is_gzipped_input, overwrite_flag=False
+        input_file,
+        output_file,
+        "simple",
+        is_gzipped=is_gzipped_input,
+        overwrite_flag=False
     )
 
     print("----------------------")

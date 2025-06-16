@@ -4,7 +4,7 @@
 
 import argparse
 import json
-import os
+from pathlib import Path
 from urllib.parse import urljoin, urlparse
 
 import requests
@@ -16,7 +16,8 @@ def extract_paper_info_from_cvf(html_content, page_url):
 
     Args:
         html_content (str): The HTML content of the page.
-        page_url (str): The URL of the page being scraped, used to resolve relative links.
+        page_url (str): The URL of the page being scraped, used to resolve relative
+            links.
 
     Returns:
         list: A list of dictionaries, where each dictionary contains info for one paper.
@@ -51,14 +52,17 @@ def extract_paper_info_from_cvf(html_content, page_url):
             paper_info["cvf_html_link"] = urljoin(base_url, title_anchor["href"])
         else:
             # If no anchor, might be an issue with the structure or an empty dt
-            print(f"Warning: Could not find title anchor for a <dt class='ptitle'> element. Content: {dt_title.get_text(strip=True)}")
+            print(
+                f"Warning: Could not find title anchor for a <dt class='ptitle'> element. "
+                f"Content: {dt_title.get_text(strip=True)}"
+            )
             continue # Skip this entry if title can't be found
 
         # --- Extract Authors ---
         # Authors are in the first <dd> immediately following the <dt class="ptitle">
         authors_dd = dt_title.find_next_sibling("dd")
         if authors_dd:
-            author_anchors = authors_dd.find_all("a") # Authors are in <a> tags within <form>
+            author_anchors = authors_dd.find_all("a")  # Authors are in <a> tags
             for author_anchor in author_anchors:
                 paper_info["authors"].append(author_anchor.get_text(strip=True))
 
@@ -86,7 +90,7 @@ def extract_paper_info_from_cvf(html_content, page_url):
             # Extract BibTeX
             bibtex_div = links_bibtex_dd.find("div", class_="bibref")
             if bibtex_div:
-                # Get text and strip leading/trailing whitespace, but preserve internal newlines
+                # Get text and strip leading/trailing whitespace, preserve newlines
                 paper_info["bibtex"] = bibtex_div.get_text(strip=False).strip()
 
         papers_data.append(paper_info)
@@ -107,7 +111,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--overwrite",
         action="store_true",
-        help="Overwrite the output file if it exists, otherwise append (or create if new)."
+        help="Overwrite the output file if it exists, otherwise append (or create)."
     )
     parser.add_argument(
         "--timeout",
@@ -134,7 +138,9 @@ if __name__ == "__main__":
     }
     url = urls[args.url_name]
     TRIAL = 0
-    output_file = f"../../../data/rss_paper_data/cvf_papers.{args.url_name}.t{TRIAL}.jsonl"
+    output_file = (
+        f"../../../data/rss_paper_data/cvf_papers.{args.url_name}.t{TRIAL}.jsonl"
+    )
 
     print("CVF Open Access Scraper")
     print("--------------------------")
@@ -143,8 +149,11 @@ if __name__ == "__main__":
 
     try:
         print("Fetching page content...")
-        headers = { # Mimic a browser a bit
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+        headers = {  # Mimic a browser a bit
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                "(KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+            )
         }
         response = requests.get(url, headers=headers, timeout=args.timeout)
         response.raise_for_status()  # Raise an exception for HTTP errors (4xx or 5xx)
@@ -156,20 +165,25 @@ if __name__ == "__main__":
         if not extracted_papers:
             print("No papers found on the page or an issue occurred during parsing.")
         else:
-            print(f"\nSuccessfully extracted information for {len(extracted_papers)} papers.")
+            print(
+                f"Successfully extracted information for {len(extracted_papers)} papers."
+            )
 
             file_mode = "a"
-            if os.path.exists(output_file):
+            if Path(output_file).exists():
                 if args.overwrite:
                     file_mode = "w"
                     print(f"Output file '{output_file}' will be overwritten.")
                 else:
-                    print(f"Appending to existing file '{output_file}'. To overwrite, use the --overwrite flag.")
+                    print(
+                        f"Appending to existing file '{output_file}'. "
+                        f"To overwrite, use the --overwrite flag."
+                    )
             else:
                 file_mode = "w"
                 print(f"Creating new output file '{output_file}'.")
 
-            with open(output_file, file_mode, encoding="utf-8") as outfile:
+            with Path(output_file).open(file_mode, encoding="utf-8") as outfile:
                 for paper_data in extracted_papers:
                     outfile.write(json.dumps(paper_data) + "\n")
 
