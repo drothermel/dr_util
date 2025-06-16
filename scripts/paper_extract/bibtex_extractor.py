@@ -224,6 +224,7 @@ def _write_entries_to_jsonl(
     output_path: str,
     parser_mode: str,
     parser: BibTexParser,
+    *,
     overwrite_flag: bool
 ) -> int:
     """Write processed entries to JSONL file.
@@ -274,8 +275,9 @@ def _write_entries_to_jsonl(
 def process_bibtex_file(
     input_bib_path: str,
     output_jsonl_path: str,
-    is_gzipped: bool,
     parser_mode: str,
+    *,
+    is_gzipped: bool,
     overwrite_flag: bool
 ) -> int:
     """Read a BibTeX file, process entries, and write to JSONL.
@@ -327,7 +329,7 @@ def process_bibtex_file(
             output_jsonl_path,
             parser_mode,
             parser,
-            overwrite_flag
+            overwrite_flag=overwrite_flag
         )
 
         print(
@@ -387,7 +389,7 @@ if __name__ == "__main__":
         print(f"Creating new output file '{output_file}'.")
 
     process_bibtex_file(
-        input_file, output_file, is_gzipped_input, "simple", overwrite_flag=False
+        input_file, output_file, "simple", is_gzipped=is_gzipped_input, overwrite_flag=False
     )
 
     print("----------------------")
