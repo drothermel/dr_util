@@ -19,7 +19,9 @@ import requests
 # --- Configuration ---
 REQUEST_TIMEOUT = 15  # second
 DELAY_BETWEEN_VOLUMES = 2  # seconds, to be polite to the server
-FIELDS_TO_DROP = ["title_detail", "summary_detail", "published_parsed", "updated_parsed"] # Added updated_parsed as it's similar
+FIELDS_TO_DROP = [
+    "title_detail", "summary_detail", "published_parsed", "updated_parsed"
+]  # Added updated_parsed as it's similar
 
 # --- Helper Function for JSON Serialization ---
 def json_converter(o):
@@ -31,7 +33,10 @@ def json_converter(o):
             return time.strftime("%Y-%m-%dT%H:%M:%SZ", o)
         except TypeError:
             return str(o)
-    raise TypeError(f"Object of type {o.__class__.__name__} is not JSON serializable and not handled by json_converter")
+    raise TypeError(
+        f"Object of type {o.__class__.__name__} is not JSON serializable "
+        f"and not handled by json_converter"
+    )
 
 # --- Core Processing Function ---
 def process_volume_to_jsonl(volume_number, output_file_handle):

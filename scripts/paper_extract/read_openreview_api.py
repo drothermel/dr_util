@@ -199,8 +199,14 @@ def fetch_and_save_data(api_base_url, output_file_handle, limit_per_request):
         f"\nFinished processing. Total items written to file: "
         f"{total_processed_count}"
     )
-    if total_expected_count is not None and total_processed_count != total_expected_count:
-         print(f"  Note: Final processed count ({total_processed_count}) does not match API's reported total ({total_expected_count}).")
+    if (
+        total_expected_count is not None
+        and total_processed_count != total_expected_count
+    ):
+         print(
+             f"  Note: Final processed count ({total_processed_count}) "
+             f"does not match API's reported total ({total_expected_count})."
+         )
 
 def remove_pagination_params(url_string):
     """Removes 'limit' and 'offset' query parameters from a URL string.
@@ -226,7 +232,7 @@ def remove_pagination_params(url_string):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="OpenReview API to JSONL Extractor. Fetches paginated 'notes' data.",
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
         "--api-name",
@@ -241,17 +247,21 @@ if __name__ == "__main__":
     parser.add_argument(
         "--overwrite",
         action="store_true",
-        help="Overwrite the output file if it exists, otherwise append (or create if new)."
+        help=("Overwrite the output file if it exists, otherwise append (or create if new)."),
     )
 
     args = parser.parse_args()
-    api_urls = {k: remove_pagination_params(v) for k, v in OPENREVIEW_API_ENDPOINTS.items()}
+    api_urls = {
+        k: remove_pagination_params(v) for k, v in OPENREVIEW_API_ENDPOINTS.items()
+    }
     for k, v in api_urls.items():
         print(k, v)
 
     api_url = api_urls[args.api_name]
     TRIAL =  0
-    output_file = f"../../../data/rss_paper_data/open_review_papers.{args.api_name}.t{TRIAL}.jsonl"
+    output_file = (
+        f"../../../data/rss_paper_data/open_review_papers.{args.api_name}.t{TRIAL}.jsonl"
+    )
 
     print("OpenReview API to JSONL Extractor")
     print("-" * 40)
@@ -265,7 +275,10 @@ if __name__ == "__main__":
             file_mode = "w"
             print(f"Output file '{output_file}' will be overwritten.")
         else:
-            print(f"Appending to existing file '{output_file}'. To overwrite, use the --overwrite flag.")
+            print(
+                f"Appending to existing file '{output_file}'. "
+                f"To overwrite, use the --overwrite flag."
+            )
     else:
         file_mode = "w"
         print(f"Creating new output file '{output_file}'.")
