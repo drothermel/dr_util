@@ -1,6 +1,6 @@
 from dataclasses import MISSING, dataclass
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 from dr_util.schema_utils import lenient_validate
 
@@ -10,7 +10,7 @@ class ConfigType(Enum):
     USES_METRICS = "uses_metrics"
 
 
-def get_schema(config_type: str) -> Optional[type[Any]]:
+def get_schema(config_type: str) -> type[Any] | None:
     match config_type:
         case ConfigType.USES_METRICS.value:
             return UsingMetricsConfig

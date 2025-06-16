@@ -8,23 +8,23 @@ import gzip
 import json
 import os
 import shutil
-from typing import Any, Dict, Optional
+from typing import Any
 
 import bibtexparser
 from bibtexparser.bparser import BibTexParser
 from bibtexparser.customization import homogenize_latex_encoding, latex_to_unicode
 
 
-def preprocess_bibtex_entry(entry: Dict[str, Any]) -> Dict[str, Any]:
+def preprocess_bibtex_entry(entry: dict[str, Any]) -> dict[str, Any]:
     """Apply standard customizations to a BibTeX entry.
-    
+
     Converts LaTeX to Unicode. This function is used by the 'default' parser
     mode via parser.customization and also called manually in the 'simple'
     mode after initial parsing.
-    
+
     Args:
         entry: A BibTeX entry dictionary.
-        
+
     Returns:
         The processed entry dictionary.
     """
@@ -40,7 +40,7 @@ def preprocess_bibtex_entry(entry: Dict[str, Any]) -> Dict[str, Any]:
     return latex_to_unicode(entry)
 
 
-def extract_info_from_bib_entry(entry: Dict[str, Any]) -> Dict[str, Any]:
+def extract_info_from_bib_entry(entry: dict[str, Any]) -> dict[str, Any]:
     """Extract relevant information from a single BibTeX entry dictionary."""
     return {
         "id": entry.get("ID"),  # Note: keys might be lowercase after homogenization
@@ -71,13 +71,13 @@ def extract_info_from_bib_entry(entry: Dict[str, Any]) -> Dict[str, Any]:
 
 def _handle_gzipped_file(input_path: str) -> str:
     """Handle decompression of gzipped BibTeX file.
-    
+
     Args:
         input_path: Path to the gzipped file.
-        
+
     Returns:
         Path to the decompressed temporary file.
-        
+
     Raises:
         TypeError: If input_path is not a string.
     """
@@ -86,17 +86,17 @@ def _handle_gzipped_file(input_path: str) -> str:
             f"Input file path for gzipped file must be a string, "
             f"but got {type(input_path)}. Value: {input_path}"
         )
-    
+
     print(f"Input file '{input_path}' is gzipped. Decompressing temporarily...")
     temp_path = input_path.replace(".gz", "") + "_temp.bib"
-    
+
     if os.path.exists(temp_path):
         os.remove(temp_path)
-        
+
     with gzip.open(input_path, "rb") as f_in:
         with open(temp_path, "wb") as f_out:
             shutil.copyfileobj(f_in, f_out)
-            
+
     print(f"Decompressed to: {temp_path}")
     return temp_path
 
@@ -114,13 +114,13 @@ def _parse_with_simple_mode(content: str) -> Any:
         RuntimeError: If parsing fails even in simple mode.
     """
     print("Using 'simple' parser mode (minimal settings for initial load).")
-    
+
     parser = BibTexParser(
         common_strings=True,
         ignore_nonstandard_types=True,  # Be lenient with @type names
         homogenize_fields=False  # Do not change field keys during initial parse
     )
-    
+
     try:
         bib_database = bibtexparser.loads(content, parser=parser)
     except Exception as e_load:
@@ -128,13 +128,13 @@ def _parse_with_simple_mode(content: str) -> Any:
         print("This suggests a fundamental parsing issue with an entry's syntax.")
         print("Consider validating the BibTeX file or identify problematic entries.")
         raise RuntimeError("Simple mode parsing failed") from e_load
-    
+
     if not bib_database or not bib_database.entries:
         return bib_database
-        
+
     print("Initial parsing successful. Now applying customizations entry by entry...")
     customized_entries = []
-    
+
     for entry_idx, original_entry in enumerate(bib_database.entries):
         current_entry = dict(original_entry)
         try:
@@ -149,7 +149,7 @@ def _parse_with_simple_mode(content: str) -> Any:
         except Exception as e_custom:
             _handle_entry_error(original_entry, entry_idx, e_custom, "General error")
             customized_entries.append({k.lower(): v for k, v in original_entry.items()})
-    
+
     bib_database.entries = customized_entries
     return bib_database
 
@@ -172,9 +172,9 @@ def _parse_with_default_mode(content: str) -> Any:
 
 
 def _handle_entry_error(
-    original_entry: Dict[str, Any], 
-    entry_idx: int, 
-    error: Exception, 
+    original_entry: dict[str, Any],
+    entry_idx: int,
+    error: Exception,
     error_type: str
 ) -> None:
     """Handle errors that occur during entry processing.
@@ -194,8 +194,8 @@ def _handle_entry_error(
 
 
 def _write_entries_to_jsonl(
-    entries: list[Dict[str, Any]], 
-    output_path: str, 
+    entries: list[dict[str, Any]],
+    output_path: str,
     parser_mode: str,
     parser: Any,
     overwrite_flag: bool
@@ -214,42 +214,42 @@ def _write_entries_to_jsonl(
     """
     count = 0
     current_file_mode = "w" if overwrite_flag else "a"
-    
+
     if not os.path.exists(output_path):
         current_file_mode = "w"
-    
+
     with open(output_path, current_file_mode, encoding="utf-8") as outfile:
         for entry_idx, entry in enumerate(entries):
             try:
                 # Ensure keys are lowercase for extract_info_from_bib_entry
-                if (parser_mode == "simple" and 
+                if (parser_mode == "simple" and
                     not getattr(parser, "homogenize_fields", False)):
                     normalized_entry = {k.lower(): v for k, v in entry.items()}
                 else:
                     normalized_entry = entry
-                
+
                 paper_info = extract_info_from_bib_entry(normalized_entry)
                 outfile.write(json.dumps(paper_info) + "\n")
                 count += 1
-                
+
                 if count % 1000 == 0:
                     print(f"  Processed {count} entries...")
-                    
+
             except Exception as e:
                 problematic_id = "N/A"
                 if isinstance(entry, dict):
                     problematic_id = entry.get("id", entry.get("ID", "N/A"))
                 print(f"Error writing entry ID '{problematic_id}' "
                       f"(index {entry_idx}) to JSON: {e}")
-    
+
     return count
 
 
 def process_bibtex_file(
-    input_bib_path: str, 
-    output_jsonl_path: str, 
-    is_gzipped: bool, 
-    parser_mode: str, 
+    input_bib_path: str,
+    output_jsonl_path: str,
+    is_gzipped: bool,
+    parser_mode: str,
     overwrite_flag: bool
 ) -> int:
     """Read a BibTeX file, process entries, and write to JSONL.
@@ -264,8 +264,8 @@ def process_bibtex_file(
     Returns:
         Number of successfully processed entries.
     """
-    temp_decompressed_path: Optional[str] = None
-    
+    temp_decompressed_path: str | None = None
+
     try:
         # Handle gzipped files
         actual_bib_path = input_bib_path
@@ -295,10 +295,10 @@ def process_bibtex_file(
         # Write entries to JSONL
         parser = BibTexParser()  # Create parser object for _write_entries_to_jsonl
         count = _write_entries_to_jsonl(
-            bib_database.entries, 
-            output_jsonl_path, 
-            parser_mode, 
-            parser, 
+            bib_database.entries,
+            output_jsonl_path,
+            parser_mode,
+            parser,
             overwrite_flag
         )
 

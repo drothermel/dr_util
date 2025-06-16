@@ -3,7 +3,7 @@ from typing import Any
 
 
 def lenient_validate(cls: type[Any]) -> type[Any]:
-    """A decorator that wraps a dataclass __init__ so that extra keyword arguments are silently ignored.
+    """A decorator that wraps a dataclass __init__ so that extra keyword arguments are ignored.
 
     Args:
         cls: The dataclass to wrap.
