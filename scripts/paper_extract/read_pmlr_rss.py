@@ -7,13 +7,14 @@
 # You can install them using pip:
 # pip install requests feedparser
 
-import requests
-import feedparser
-import json
-import time
 import argparse
-import os # For checking if file exists
+import json
+import os  # For checking if file exists
 import re
+import time
+
+import feedparser
+import requests
 
 # --- Configuration ---
 REQUEST_TIMEOUT = 15  # second
@@ -22,26 +23,25 @@ FIELDS_TO_DROP = ["title_detail", "summary_detail", "published_parsed", "updated
 
 # --- Helper Function for JSON Serialization ---
 def json_converter(o):
-    """
-    Converts objects that are not directly JSON serializable.
+    """Converts objects that are not directly JSON serializable.
     Specifically handles time.struct_time from feedparser.
     """
     if isinstance(o, time.struct_time):
         try:
             return time.strftime("%Y-%m-%dT%H:%M:%SZ", o)
-        except TypeError: 
-            return str(o) 
+        except TypeError:
+            return str(o)
     raise TypeError(f"Object of type {o.__class__.__name__} is not JSON serializable and not handled by json_converter")
 
 # --- Core Processing Function ---
 def process_volume_to_jsonl(volume_number, output_file_handle):
-    """
-    Fetches, parses, extracts conference metadata, and writes entries 
+    """Fetches, parses, extracts conference metadata, and writes entries
     from a single volume's RSS feed to the output file.
 
     Args:
         volume_number (int): The PMLR volume number.
         output_file_handle: An open file handle for writing JSON lines.
+
     Returns:
         int: Number of entries processed for this volume.
     """
@@ -50,14 +50,14 @@ def process_volume_to_jsonl(volume_number, output_file_handle):
 
     try:
         headers = {
-            'User-Agent': f'PMLRMultiVolumeExtractor/1.1 (Volume {volume_number})' # Updated version
+            "User-Agent": f"PMLRMultiVolumeExtractor/1.1 (Volume {volume_number})" # Updated version
         }
         response = requests.get(feed_url, headers=headers, timeout=REQUEST_TIMEOUT)
-        
+
         if response.status_code == 404:
             print(f"  WARNING: Volume {volume_number} RSS feed not found (404 Error). Skipping.")
             return 0
-        
+
         response.raise_for_status()
 
     except requests.exceptions.RequestException as e:
@@ -71,7 +71,7 @@ def process_volume_to_jsonl(volume_number, output_file_handle):
     conference_year = "N/A"
     conference_title_from_feed = "N/A"
 
-    if hasattr(feed, 'feed'):
+    if hasattr(feed, "feed"):
         feed_meta = feed.feed
         conference_title_from_feed = feed_meta.get("title", "N/A")
         conf_desc = feed_meta.get("description", "N/A")
@@ -80,38 +80,38 @@ def process_volume_to_jsonl(volume_number, output_file_handle):
         if feed_meta.get("published_parsed"):
             try:
                 conference_year = str(feed_meta.published_parsed.tm_year)
-            except AttributeError: 
+            except AttributeError:
                 pass # Handled by later fallbacks
 
         # 2. Attempt to get short name and potentially year from managingEditor
         managing_editor_str = feed_meta.get("managingEditor", "")
         if managing_editor_str:
             # Regex to find patterns like "(CoLLAs 2023)" or "(AISTATS 2023)"
-            match = re.search(r'\(([^)]+?)\s+(19\d{2}|20\d{2})\)$', managing_editor_str.strip())
+            match = re.search(r"\(([^)]+?)\s+(19\d{2}|20\d{2})\)$", managing_editor_str.strip())
             if match:
                 conference_short_name = match.group(1).strip()
                 # Prefer year from managingEditor if available and matches a year format
-                conference_year = match.group(2).strip() 
-        
+                conference_year = match.group(2).strip()
+
         # 3. Fallbacks for year if still "N/A" (after trying managingEditor and feed's published_parsed)
         if conference_year == "N/A": # Check if year is still not found
             description_text = feed_meta.get("description", "")
             if description_text:
-                year_match_desc = re.search(r'\b(19\d{2}|20\d{2})\b', description_text)
+                year_match_desc = re.search(r"\b(19\d{2}|20\d{2})\b", description_text)
                 if year_match_desc:
                     conference_year = year_match_desc.group(1)
-        
+
         if conference_year == "N/A" and conference_title_from_feed != "N/A":
             # Try from feed title as last resort for year
-            year_match_title = re.search(r'\b(19\d{2}|20\d{2})\b', conference_title_from_feed)
+            year_match_title = re.search(r"\b(19\d{2}|20\d{2})\b", conference_title_from_feed)
             if year_match_title:
                 conference_year = year_match_title.group(1)
 
         # 4. Fallback for conference_short_name: if still "N/A", use the full feed title
         if conference_short_name == "N/A" and conference_title_from_feed != "N/A":
             conference_short_name = re.sub(r"^Proceedings of\s*", "",conf_desc.split("\n")[0])
-    
-    
+
+
     print(f"  Extracted Conference Info: Name='{conference_short_name}', Year='{conference_year}', FeedTitle='{conference_title_from_feed[:60]}...'")
 
     if not feed.entries:
@@ -122,13 +122,13 @@ def process_volume_to_jsonl(volume_number, output_file_handle):
     for i, entry in enumerate(feed.entries):
         try:
             # Create a dictionary from the FeedParserDict to add custom fields
-            entry_data = dict(entry) 
-            
+            entry_data = dict(entry)
+
             # Add extracted conference metadata to each paper entry
-            entry_data['conference_short_name'] = conference_short_name
-            entry_data['conference_year'] = conference_year
+            entry_data["conference_short_name"] = conference_short_name
+            entry_data["conference_year"] = conference_year
             # Optionally, add the full title from the feed's metadata for context
-            entry_data['conference_title_from_feed'] = conference_title_from_feed
+            entry_data["conference_title_from_feed"] = conference_title_from_feed
 
             # Drop specified fields before writing
             for field_to_drop in FIELDS_TO_DROP:
@@ -161,7 +161,7 @@ if __name__ == "__main__":
         "-e", "--end-volume",
         type=int,
         default=232,
-        help=f"The last PMLR volume number to process",
+        help="The last PMLR volume number to process",
     )
     parser.add_argument(
         "--overwrite",
@@ -186,35 +186,35 @@ if __name__ == "__main__":
     print(f"Fields to be dropped from each entry: {', '.join(FIELDS_TO_DROP)}")
 
 
-    file_mode = 'a' 
+    file_mode = "a"
     if os.path.exists(OUTPUT_FILENAME):
         while True:
             choice = input(f"File '{OUTPUT_FILENAME}' already exists. (A)ppend, (O)verwrite, or (Q)uit? [A/O/Q]: ").strip().lower()
-            if choice == 'o':
-                file_mode = 'w'
+            if choice == "o":
+                file_mode = "w"
                 print(f"Output file '{OUTPUT_FILENAME}' will be overwritten.")
                 break
-            elif choice == 'q':
+            elif choice == "q":
                 print("Exiting.")
                 exit()
-            elif choice == 'a':
+            elif choice == "a":
                 print(f"Appending to existing file '{OUTPUT_FILENAME}'.")
                 break
             else:
                 print("Invalid choice. Please enter A, O, or Q.")
     else:
-        file_mode = 'w' 
+        file_mode = "w"
         print(f"Creating new output file '{OUTPUT_FILENAME}'.")
 
     total_entries_overall = 0
-    with open(OUTPUT_FILENAME, file_mode, encoding='utf-8') as outfile:
+    with open(OUTPUT_FILENAME, file_mode, encoding="utf-8") as outfile:
         for volume in range(start_volume, end_volume + 1):
             entries_from_volume = process_volume_to_jsonl(volume, outfile)
             total_entries_overall += entries_from_volume
-            if volume < end_volume: 
+            if volume < end_volume:
                 print(f"  Waiting for {DELAY_BETWEEN_VOLUMES} seconds before next volume...")
                 time.sleep(DELAY_BETWEEN_VOLUMES)
-    
+
     print("-" * 70)
     print(f"Processing complete. Total entries written: {total_entries_overall}")
     print(f"Data saved to {OUTPUT_FILENAME}")

@@ -15,14 +15,15 @@ def get_cifar_dataset(
     transform=DEFAULT_TRANSFORM,
     download=DEFAULT_DOWNLOAD,
 ):
-    """
-    Loads a specified dataset (CIFAR-10 or CIFAR-100).
+    """Loads a specified dataset (CIFAR-10 or CIFAR-100).
+
     Args:
         dataset_name (str): Name of the dataset ("cifar10" or "cifar100").
         source_split (str): "train" or "test"
         root (str): Root directory where the dataset is stored or will be downloaded.
         transform (callable, optional): A function/transform to apply to the data.
         download (bool): Whether to download the dataset if not found locally.
+
     Returns:
         torch.utils.data.Dataset: The loaded dataset.
     """
@@ -48,8 +49,7 @@ def get_cifar_dataset(
 
 
 class TransformedSubset(torch.utils.data.Dataset):
-    """
-    A wrapper for a torch.utils.data.Subset that applies a transform.
+    """A wrapper for a torch.utils.data.Subset that applies a transform.
     This is useful because Subsets themselves don't have a transform attribute
     that can be set after creation.
     """

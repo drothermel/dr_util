@@ -12,8 +12,7 @@ from botocore.handlers import disable_signing
 
 class S3Manager:
     def __init__(self, boto3_session: boto3.Session | None = None):
-        """
-        :param boto3_session: boto3 session (`boto3.Session`) optional,
+        """:param boto3_session: boto3 session (`boto3.Session`) optional,
         if not set will use default session
         High-level abstractions for working with S3.
         """
@@ -32,8 +31,7 @@ class S3Manager:
         s3_key: str,
         output_file_path_str: str,
     ) -> None:
-        """
-        Download a file from S3 and store at output_file_path if it has not already
+        """Download a file from S3 and store at output_file_path if it has not already
         been downloaded. Only downloads file if a more recent timestamps exists on S3.
         :param s3_bucket: s3 bucket
         :param s3_key: s3 key
@@ -59,8 +57,7 @@ class S3Manager:
             self._log.info(">> Download complete.")
 
     def upload_bytes(self, bytes_to_upload: bytes, s3_bucket: str, s3_key: str) -> None:
-        """
-        Upload bytes to S3.
+        """Upload bytes to S3.
         :param bytes_to_upload: bytes
         :param s3_bucket: s3 bucket
         :param s3_key: s3 key

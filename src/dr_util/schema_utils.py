@@ -2,8 +2,7 @@ from dataclasses import MISSING, fields
 
 
 def lenient_validate(cls):
-    """
-    A decorator that wraps a dataclass __init__ so that extra keyword arguments
+    """A decorator that wraps a dataclass __init__ so that extra keyword arguments
     are silently ignored.
     """
     original_init = cls.__init__

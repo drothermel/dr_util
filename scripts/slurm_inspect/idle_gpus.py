@@ -1,12 +1,13 @@
-import subprocess
 import re
+import subprocess
 from collections import defaultdict
 
+
 def get_sinfo():
-    process = subprocess.Popen(['sinfo', '-lNe'], stdout=subprocess.PIPE, text=True)
+    process = subprocess.Popen(["sinfo", "-lNe"], stdout=subprocess.PIPE, text=True)
     stdout, stderr = process.communicate()
     assert process.returncode == 0, f"Error executing sinfo: {stderr}"
-    lines = stdout.strip().split('\n')
+    lines = stdout.strip().split("\n")
     # Drop the headers before returning the lines
     if len(lines) <= 2:
         return []
@@ -14,7 +15,7 @@ def get_sinfo():
 
 def parse_sinfo(sinfo_lines, node_parser):
     node_info = defaultdict(lambda: {"nodes": set(), "partitions": set()})
-    partition_info = defaultdict(set) 
+    partition_info = defaultdict(set)
     # Regex to extract node type (letters) and id (numbers)
     for line in sinfo_lines:
         parts = line.strip().split()
@@ -50,14 +51,14 @@ def print_idle_gpu_by_partition_type(partition_info, node_parser):
         for partition_name, nodes_in_partition_set in sorted(partition_info.items()):
             # Count of unique nodes in this partition
             node_count = len(nodes_in_partition_set)
-            
+
             # Extract unique node types from the node names in this partition
             node_types_in_this_partition = set()
             for node_name in nodes_in_partition_set:
                 match_node_type = node_parser.match(node_name)
                 if match_node_type:
                     node_types_in_this_partition.add(match_node_type.group(1))
-            
+
             node_types_str = ", ".join(sorted(list(node_types_in_this_partition))) if node_types_in_this_partition else "N/A"
             print(f"  {partition_name}: {node_count} unique node(s) (Node Types: {node_types_str})")
 
@@ -68,11 +69,11 @@ def get_idle_gpu_node_info():
     if len(sinfo_lines) == 0:
         print("No data found from sinfo command after headers.")
         return
-    node_parser = re.compile(r'^([a-zA-Z]+)(\d+)$')
+    node_parser = re.compile(r"^([a-zA-Z]+)(\d+)$")
     node_info, partition_info = parse_sinfo(sinfo_lines, node_parser)
     print_idle_gpu_by_node_type(node_info)
     print_idle_gpu_by_partition_type(partition_info, node_parser)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     get_idle_gpu_node_info()

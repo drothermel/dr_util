@@ -23,7 +23,7 @@ def create_logger(cfg, logger_type):
             return HydraLogger(cfg)
         case LoggerType.JSON.value:
             return JsonLogger(cfg)
-    assert False, f">> Unknown logger type: {logger_type}"  # noqa
+    assert False, f">> Unknown logger type: {logger_type}"
 
 
 class HydraLogger:
@@ -173,7 +173,7 @@ class MetricsSubgroup:
 
     @singledispatchmethod
     def add(self, data, ns=1):  # noqa: ARG002 (unused args)
-        assert False, f">> Unexpected data type: {type(data)}"  # noqa
+        assert False, f">> Unexpected data type: {type(data)}"
 
     @add.register(tuple)
     def _(self, data, ns=1):

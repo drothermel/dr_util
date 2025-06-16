@@ -3,12 +3,13 @@
 # iterates through results using 'offset' and 'limit',
 # and saves each 'note' (paper entry) as a JSON line in an output file.
 
-import requests
-import json
-import time
 import argparse
+import json
 import os
-from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
+import time
+from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
+
+import requests
 
 # --- Configuration ---
 DELAY_BETWEEN_REQUESTS = 1  # seconds, to be polite to the server
@@ -49,42 +50,40 @@ OPENREVIEW_API_ENDPOINTS = {
 }
 
 def extract_paper_data(note):
-    """
-    Extracts relevant information from a single 'note' object.
+    """Extracts relevant information from a single 'note' object.
     Adjust this function based on the actual structure of the API response.
     """
-    content = note.get('content', {})
-    
+    content = note.get("content", {})
+
     # Helper to safely get values from nested dictionaries
     def get_value(data_dict, key, default=None):
-        return data_dict.get(key, {}).get('value', default) if isinstance(data_dict.get(key), dict) else data_dict.get(key, default)
+        return data_dict.get(key, {}).get("value", default) if isinstance(data_dict.get(key), dict) else data_dict.get(key, default)
 
     return {
-        'id': note.get('id'),
-        'forum': note.get('forum'),
-        'title': get_value(content, 'title'),
-        'authors': get_value(content, 'authors', []), # Expecting a list
-        'author_ids': get_value(content, 'authorids', []), # Expecting a list
-        'keywords': get_value(content, 'keywords', []), # Expecting a list
-        'abstract': get_value(content, 'abstract'),
-        'venue': get_value(content, 'venue'),
-        'venue_id': get_value(content, 'venueid'),
-        'bibtex': get_value(content, '_bibtex'),
-        'blogpost_url': get_value(content, 'blogpost_url'), # From example
-        'pdf_url': get_value(content, 'pdf'), # Common field, might not be in all 'content'
-        'html_url': get_value(content, 'html'), # Common field
-        'cdate': note.get('cdate'), # Creation date of the note itself
-        'mdate': note.get('mdate'), # Modification date
-        'odate': note.get('odate'), # Original submission date (often same as cdate for first version)
-        'tcdate': note.get('tcdate'), # True creation date
-        'tmdate': note.get('tmdate'), # True modification date
-        'original_note_content': content # Store the whole content for further analysis if needed
+        "id": note.get("id"),
+        "forum": note.get("forum"),
+        "title": get_value(content, "title"),
+        "authors": get_value(content, "authors", []), # Expecting a list
+        "author_ids": get_value(content, "authorids", []), # Expecting a list
+        "keywords": get_value(content, "keywords", []), # Expecting a list
+        "abstract": get_value(content, "abstract"),
+        "venue": get_value(content, "venue"),
+        "venue_id": get_value(content, "venueid"),
+        "bibtex": get_value(content, "_bibtex"),
+        "blogpost_url": get_value(content, "blogpost_url"), # From example
+        "pdf_url": get_value(content, "pdf"), # Common field, might not be in all 'content'
+        "html_url": get_value(content, "html"), # Common field
+        "cdate": note.get("cdate"), # Creation date of the note itself
+        "mdate": note.get("mdate"), # Modification date
+        "odate": note.get("odate"), # Original submission date (often same as cdate for first version)
+        "tcdate": note.get("tcdate"), # True creation date
+        "tmdate": note.get("tmdate"), # True modification date
+        "original_note_content": content # Store the whole content for further analysis if needed
         # Add any other fields from 'note' or 'note.content' you need
     }
 
 def fetch_and_save_data(api_base_url, output_file_handle, limit_per_request):
-    """
-    Fetches all data from the paginated API and saves it.
+    """Fetches all data from the paginated API and saves it.
     """
     current_offset = 0
     total_processed_count = 0
@@ -97,21 +96,21 @@ def fetch_and_save_data(api_base_url, output_file_handle, limit_per_request):
         # Construct the full API URL with limit and offset
         # Ensure the base URL doesn't already have limit/offset if it's configurable later
         paginated_url = f"{api_base_url}&limit={limit_per_request}&offset={current_offset}"
-        
+
         print(f"  Fetching: {paginated_url}")
 
         try:
             headers = {
-                'User-Agent': 'OpenReviewAPIExtractor/1.0'
+                "User-Agent": "OpenReviewAPIExtractor/1.0"
             }
             response = requests.get(paginated_url, headers=headers, timeout=30) # Increased timeout for potentially larger responses
             response.raise_for_status()  # Raise an exception for HTTP errors
-            
+
             data = response.json()
-            notes = data.get('notes', [])
-            
+            notes = data.get("notes", [])
+
             if total_expected_count is None: # First call
-                total_expected_count = data.get('count', 0)
+                total_expected_count = data.get("count", 0)
                 if total_expected_count == 0 and not notes:
                     print("  API returned 0 total items and no notes. Exiting.")
                     break
@@ -122,7 +121,7 @@ def fetch_and_save_data(api_base_url, output_file_handle, limit_per_request):
                 if total_expected_count is not None and total_processed_count < total_expected_count:
                     print(f"  WARNING: Processed {total_processed_count} items, but API reported {total_expected_count}. There might be an issue or API limit.")
                 break
-            
+
             for note in notes:
                 try:
                     paper_data = extract_paper_data(note)
@@ -140,7 +139,7 @@ def fetch_and_save_data(api_base_url, output_file_handle, limit_per_request):
             if total_expected_count is not None and current_offset >= total_expected_count:
                 print("  Reached or exceeded total expected count based on offset. Assuming all data fetched.")
                 break
-            
+
             # Safety break if API keeps returning data without count or notes list becomes empty unexpectedly
             if len(notes) < limit_per_request and total_expected_count is None:
                  print("  API returned fewer items than requested and total count is unknown. Assuming end of data.")
@@ -161,21 +160,20 @@ def fetch_and_save_data(api_base_url, output_file_handle, limit_per_request):
 
         # Be polite to the server
         time.sleep(DELAY_BETWEEN_REQUESTS)
-    
+
     print(f"\nFinished processing. Total items written to file: {total_processed_count}")
     if total_expected_count is not None and total_processed_count != total_expected_count:
          print(f"  Note: Final processed count ({total_processed_count}) does not match API's reported total ({total_expected_count}).")
 
 def remove_pagination_params(url_string):
-    """
-    Removes 'limit' and 'offset' query parameters from a URL string.
+    """Removes 'limit' and 'offset' query parameters from a URL string.
     """
     parsed_url = urlparse(url_string)
     query_params = parse_qs(parsed_url.query)
 
     # Remove 'limit' and 'offset' if they exist
-    query_params.pop('limit', None)
-    query_params.pop('offset', None)
+    query_params.pop("limit", None)
+    query_params.pop("offset", None)
 
     # Reconstruct the query string without the removed parameters
     new_query_string = urlencode(query_params, doseq=True)
@@ -224,19 +222,19 @@ if __name__ == "__main__":
     print(f"Output File: {output_file}")
     print(f"Limit per request: {args.limit}")
 
-    file_mode = 'a'
+    file_mode = "a"
     if os.path.exists(output_file):
         if args.overwrite:
-            file_mode = 'w'
+            file_mode = "w"
             print(f"Output file '{output_file}' will be overwritten.")
         else:
             print(f"Appending to existing file '{output_file}'. To overwrite, use the --overwrite flag.")
     else:
-        file_mode = 'w'
+        file_mode = "w"
         print(f"Creating new output file '{output_file}'.")
 
     try:
-        with open(output_file, file_mode, encoding='utf-8') as outfile:
+        with open(output_file, file_mode, encoding="utf-8") as outfile:
             fetch_and_save_data(api_url, outfile, args.limit)
     except Exception as e:
         print(f"An unexpected error occurred during script execution: {e}")
