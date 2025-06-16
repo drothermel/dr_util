@@ -26,7 +26,6 @@ build-backend = "hatchling.build"
 
 [dependency-groups]
 dev = [
-    "pytest>=8.3.4",
     "ruff>=0.9.6",
     "mypy>=1.16.0",
     "tomlkit>=0.12.0",
@@ -46,7 +45,6 @@ test-ml = [
 all = [
     {include-group = "dev"},
     {include-group = "test"},
-    {include-group = "test-ml"},
 ]
 
 [tool.ruff]
@@ -232,10 +230,6 @@ markers = [
     "serial: marks tests that must run serially",
     "integration: marks integration tests",
 ]
-
-# Coverage integration
-plugins = ["pytest-cov"]
-
 
 [tool.coverage.report]
 exclude_lines = [
