@@ -144,6 +144,13 @@ class MetricsSubgroup:
     """Handles metrics collection for a specific group (e.g., train, val)."""
 
     def __init__(self, cfg: DictConfig, name: str = "", metrics: Any | None = None) -> None:
+        """Initialize MetricsSubgroup.
+
+        Args:
+            cfg: Configuration object containing metrics settings.
+            name: Name of the metrics group.
+            metrics: Optional metrics configuration.
+        """
         self.name = name
         self.metrics = metrics
         self.data_structure = cfg.metrics.init
@@ -195,6 +202,11 @@ class MetricsSubgroup:
         self._add_tuple(BATCH_KEY, ns)
 
     def agg(self) -> dict[str, Any]:
+        """Aggregate collected metrics data.
+        
+        Returns:
+            Dictionary of aggregated metrics.
+        """
         agg_data = {}
         for key in self.data:
             agg_val = self.agg_fxns[key](self.data, key)
@@ -207,6 +219,11 @@ class Metrics:
     """Main metrics collection and logging system."""
 
     def __init__(self, cfg: DictConfig) -> None:
+        """Initialize Metrics system.
+
+        Args:
+            cfg: Configuration object containing metrics and logging settings.
+        """
         self.cfg = cfg
         self.group_names = ["train", "val"]
 
@@ -215,20 +232,50 @@ class Metrics:
         self.loggers = [create_logger(cfg, lt) for lt in cfg.metrics.loggers]
 
     def log(self, value: Any) -> None:
+        """Log a value to all configured loggers.
+
+        Args:
+            value: The value to log.
+        """
         for logger in self.loggers:
             logger.log(value)
 
     def train(self, data: tuple | dict[str, Any], ns: int = 1) -> None:
+        """Add training data to metrics.
+
+        Args:
+            data: Training data as tuple (key, value) or dict.
+            ns: Number of samples (batch size).
+        """
         self.groups["train"].add(data, ns=ns)
 
     def val(self, data: tuple | dict[str, Any], ns: int = 1) -> None:
+        """Add validation data to metrics.
+
+        Args:
+            data: Validation data as tuple (key, value) or dict.
+            ns: Number of samples (batch size).
+        """
         self.groups["val"].add(data, ns=ns)
 
     def agg(self, data_name: str) -> dict[str, Any]:
+        """Aggregate metrics for a specific data group.
+
+        Args:
+            data_name: Name of the data group (e.g., 'train', 'val').
+
+        Returns:
+            Dictionary of aggregated metrics.
+        """
         assert data_name in self.groups, f">> Invalid Data Name: {data_name}"
         return self.groups[data_name].agg()
 
     def agg_log(self, data_name: str) -> None:
+        """Aggregate metrics and log the results.
+
+        Args:
+            data_name: Name of the data group to aggregate and log.
+        """
         log_dict = {
             "title": f"agg_{data_name}",
             "data_name": data_name,

@@ -20,6 +20,11 @@ class BibtexParsingError(Exception):
     """Exception raised when BibTeX parsing fails."""
 
     def __init__(self, message: str = "Simple mode parsing failed") -> None:
+        """Initialize BibtexParsingError.
+
+        Args:
+            message: Error message to display.
+        """
         super().__init__(message)
 
 
@@ -27,6 +32,12 @@ class BibtexInputError(TypeError):
     """Exception raised for invalid input types."""
 
     def __init__(self, input_path: str, input_type: type) -> None:
+        """Initialize BibtexInputError.
+
+        Args:
+            input_path: The invalid input path provided.
+            input_type: The actual type of the input.
+        """
         super().__init__(
             f"Input file path for gzipped file must be a string, "
             f"but got {input_type}. Value: {input_path}"
