@@ -8,17 +8,25 @@ import gzip
 import json
 import os
 import shutil
+from typing import Any, Dict, Optional
 
 import bibtexparser
 from bibtexparser.bparser import BibTexParser
 from bibtexparser.customization import homogenize_latex_encoding, latex_to_unicode
 
 
-def preprocess_bibtex_entry(entry):
+def preprocess_bibtex_entry(entry: Dict[str, Any]) -> Dict[str, Any]:
     """Apply standard customizations to a BibTeX entry.
-    Converts LaTeX to Unicode.
-    This function is used by the 'default' parser mode via parser.customization
-    and also called manually in the 'simple' mode after initial parsing.
+    
+    Converts LaTeX to Unicode. This function is used by the 'default' parser
+    mode via parser.customization and also called manually in the 'simple'
+    mode after initial parsing.
+    
+    Args:
+        entry: A BibTeX entry dictionary.
+        
+    Returns:
+        The processed entry dictionary.
     """
     # Ensure entry is a dict, which it should be from bibtexparser
     if not isinstance(entry, dict):
@@ -26,20 +34,24 @@ def preprocess_bibtex_entry(entry):
         print(f"Warning: preprocess_bibtex_entry received non-dict type: {type(entry)}")
         return entry
 
-    # These functions expect a dictionary (the entry) and modify it or return a modified version.
+    # These functions expect a dictionary (the entry) and modify it or return
+    # a modified version.
     entry = homogenize_latex_encoding(entry)
-    entry = latex_to_unicode(entry)
-    return entry
+    return latex_to_unicode(entry)
 
-def extract_info_from_bib_entry(entry):
-    """Extracts relevant information from a single BibTeX entry dictionary.
-    """
+
+def extract_info_from_bib_entry(entry: Dict[str, Any]) -> Dict[str, Any]:
+    """Extract relevant information from a single BibTeX entry dictionary."""
     return {
-        "id": entry.get("ID"), # Note: keys might be lowercase after homogenization
+        "id": entry.get("ID"),  # Note: keys might be lowercase after homogenization
         "entry_type": entry.get("ENTRYTYPE"),
         "title": entry.get("title"),
         "author": entry.get("author"),
-        "authors_list": [author.strip() for author in entry.get("author", "").split(" and ")] if entry.get("author") and isinstance(entry.get("author"), str) else [],
+        "authors_list": (
+            [author.strip() for author in entry.get("author", "").split(" and ")]
+            if entry.get("author") and isinstance(entry.get("author"), str)
+            else []
+        ),
         "abstract": entry.get("abstract"),
         "year": entry.get("year"),
         "month": entry.get("month"),
@@ -53,123 +65,242 @@ def extract_info_from_bib_entry(entry):
         "publisher": entry.get("publisher"),
         "address": entry.get("address"),
         "editor": entry.get("editor"),
-        "bibtex_entry_raw": entry # Contains the entry after parsing and any customizations
+        "bibtex_entry_raw": entry,  # Contains entry after parsing and customizations
     }
 
-def process_bibtex_file(input_bib_path, output_jsonl_path, is_gzipped, parser_mode, overwrite_flag):
-    """Reads a BibTeX file, processes entries, and writes to JSONL.
+
+def _handle_gzipped_file(input_path: str) -> str:
+    """Handle decompression of gzipped BibTeX file.
+    
+    Args:
+        input_path: Path to the gzipped file.
+        
+    Returns:
+        Path to the decompressed temporary file.
+        
+    Raises:
+        TypeError: If input_path is not a string.
     """
-    bib_database = None
-    temp_decompressed_path = None
+    if not isinstance(input_path, str):
+        raise TypeError(
+            f"Input file path for gzipped file must be a string, "
+            f"but got {type(input_path)}. Value: {input_path}"
+        )
+    
+    print(f"Input file '{input_path}' is gzipped. Decompressing temporarily...")
+    temp_path = input_path.replace(".gz", "") + "_temp.bib"
+    
+    if os.path.exists(temp_path):
+        os.remove(temp_path)
+        
+    with gzip.open(input_path, "rb") as f_in:
+        with open(temp_path, "wb") as f_out:
+            shutil.copyfileobj(f_in, f_out)
+            
+    print(f"Decompressed to: {temp_path}")
+    return temp_path
 
+
+def _parse_with_simple_mode(content: str) -> Any:
+    """Parse BibTeX content using simple parser mode.
+    
+    Args:
+        content: The BibTeX file content as string.
+        
+    Returns:
+        Parsed BibTeX database object.
+        
+    Raises:
+        RuntimeError: If parsing fails even in simple mode.
+    """
+    print("Using 'simple' parser mode (minimal settings for initial load).")
+    
+    parser = BibTexParser(
+        common_strings=True,
+        ignore_nonstandard_types=True,  # Be lenient with @type names
+        homogenize_fields=False  # Do not change field keys during initial parse
+    )
+    
     try:
-        actual_bib_path_to_parse = input_bib_path
+        bib_database = bibtexparser.loads(content, parser=parser)
+    except Exception as e_load:
+        print(f"CRITICAL ERROR during bibtexparser.loads() in 'simple' mode: {e_load}")
+        print("This suggests a fundamental parsing issue with an entry's syntax.")
+        print("Consider validating the BibTeX file or identify problematic entries.")
+        raise RuntimeError("Simple mode parsing failed") from e_load
+    
+    if not bib_database or not bib_database.entries:
+        return bib_database
+        
+    print("Initial parsing successful. Now applying customizations entry by entry...")
+    customized_entries = []
+    
+    for entry_idx, original_entry in enumerate(bib_database.entries):
+        current_entry = dict(original_entry)
+        try:
+            # Homogenize field keys to lowercase manually
+            current_entry = {k.lower(): v for k, v in current_entry.items()}
+            # Apply standard BibTeX customizations
+            current_entry = preprocess_bibtex_entry(current_entry)
+            customized_entries.append(current_entry)
+        except AttributeError as e_attr:
+            _handle_entry_error(original_entry, entry_idx, e_attr, "AttributeError")
+            customized_entries.append({k.lower(): v for k, v in original_entry.items()})
+        except Exception as e_custom:
+            _handle_entry_error(original_entry, entry_idx, e_custom, "General error")
+            customized_entries.append({k.lower(): v for k, v in original_entry.items()})
+    
+    bib_database.entries = customized_entries
+    return bib_database
+
+
+def _parse_with_default_mode(content: str) -> Any:
+    """Parse BibTeX content using default parser mode.
+    
+    Args:
+        content: The BibTeX file content as string.
+        
+    Returns:
+        Parsed BibTeX database object.
+    """
+    print("Using 'default' parser mode.")
+    parser = BibTexParser(common_strings=True)
+    parser.customization = preprocess_bibtex_entry
+    parser.ignore_nonstandard_types = False
+    parser.homogenize_fields = True  # Field keys will be lowercased by parser
+    return bibtexparser.loads(content, parser=parser)
+
+
+def _handle_entry_error(
+    original_entry: Dict[str, Any], 
+    entry_idx: int, 
+    error: Exception, 
+    error_type: str
+) -> None:
+    """Handle errors that occur during entry processing.
+    
+    Args:
+        original_entry: The problematic entry.
+        entry_idx: Index of the entry.
+        error: The exception that occurred.
+        error_type: Type of error for logging.
+    """
+    problematic_id_dict = {k.lower(): v for k, v in original_entry.items()}
+    problematic_id = problematic_id_dict.get("id", original_entry.get("ID", "N/A"))
+    print(f"WARNING: {error_type} during customization of entry "
+          f"ID '{problematic_id}' (index {entry_idx}): {error}")
+    if error_type == "AttributeError":
+        print(f"  Problematic entry data (before error): {original_entry}")
+
+
+def _write_entries_to_jsonl(
+    entries: list[Dict[str, Any]], 
+    output_path: str, 
+    parser_mode: str,
+    parser: Any,
+    overwrite_flag: bool
+) -> int:
+    """Write processed entries to JSONL file.
+    
+    Args:
+        entries: List of processed BibTeX entries.
+        output_path: Path to output JSONL file.
+        parser_mode: The parser mode used.
+        parser: The parser object.
+        overwrite_flag: Whether to overwrite existing file.
+        
+    Returns:
+        Number of successfully written entries.
+    """
+    count = 0
+    current_file_mode = "w" if overwrite_flag else "a"
+    
+    if not os.path.exists(output_path):
+        current_file_mode = "w"
+    
+    with open(output_path, current_file_mode, encoding="utf-8") as outfile:
+        for entry_idx, entry in enumerate(entries):
+            try:
+                # Ensure keys are lowercase for extract_info_from_bib_entry
+                if (parser_mode == "simple" and 
+                    not getattr(parser, "homogenize_fields", False)):
+                    normalized_entry = {k.lower(): v for k, v in entry.items()}
+                else:
+                    normalized_entry = entry
+                
+                paper_info = extract_info_from_bib_entry(normalized_entry)
+                outfile.write(json.dumps(paper_info) + "\n")
+                count += 1
+                
+                if count % 1000 == 0:
+                    print(f"  Processed {count} entries...")
+                    
+            except Exception as e:
+                problematic_id = "N/A"
+                if isinstance(entry, dict):
+                    problematic_id = entry.get("id", entry.get("ID", "N/A"))
+                print(f"Error writing entry ID '{problematic_id}' "
+                      f"(index {entry_idx}) to JSON: {e}")
+    
+    return count
+
+
+def process_bibtex_file(
+    input_bib_path: str, 
+    output_jsonl_path: str, 
+    is_gzipped: bool, 
+    parser_mode: str, 
+    overwrite_flag: bool
+) -> int:
+    """Read a BibTeX file, process entries, and write to JSONL.
+    
+    Args:
+        input_bib_path: Path to input BibTeX file.
+        output_jsonl_path: Path to output JSONL file.
+        is_gzipped: Whether input file is gzipped.
+        parser_mode: Parser mode ('simple' or 'default').
+        overwrite_flag: Whether to overwrite existing output file.
+        
+    Returns:
+        Number of successfully processed entries.
+    """
+    temp_decompressed_path: Optional[str] = None
+    
+    try:
+        # Handle gzipped files
+        actual_bib_path = input_bib_path
         if is_gzipped:
-            if not isinstance(input_bib_path, str):
-                raise TypeError(
-                    f"Input file path for gzipped file must be a string, but got {type(input_bib_path)}. Value: {input_bib_path}"
-                )
-            print(f"Input file '{input_bib_path}' is gzipped. Decompressing temporarily...")
-            temp_decompressed_path = input_bib_path.replace(".gz", "") + "_temp.bib"
-            if os.path.exists(temp_decompressed_path):
-                os.remove(temp_decompressed_path)
-            with gzip.open(input_bib_path, "rb") as f_in:
-                with open(temp_decompressed_path, "wb") as f_out:
-                    shutil.copyfileobj(f_in, f_out)
-            actual_bib_path_to_parse = temp_decompressed_path
-            print(f"Decompressed to: {actual_bib_path_to_parse}")
+            temp_decompressed_path = _handle_gzipped_file(input_bib_path)
+            actual_bib_path = temp_decompressed_path
 
-        print(f"Parsing BibTeX file: {actual_bib_path_to_parse} (Mode: {parser_mode})")
+        print(f"Parsing BibTeX file: {actual_bib_path} (Mode: {parser_mode})")
 
-        bib_content_str = ""
-        with open(actual_bib_path_to_parse, encoding="utf-8") as bibtex_file:
+        # Read file content
+        with open(actual_bib_path, encoding="utf-8") as bibtex_file:
             bib_content_str = bibtex_file.read()
 
+        # Parse based on mode
         if parser_mode == "simple":
-            print("Using 'simple' parser mode (minimal settings for initial load).")
-            # Simplest possible parser for the initial .loads() call.
-            # No parser.customization is set here for the .loads() step.
-            parser = BibTexParser(
-                common_strings=True,
-                ignore_nonstandard_types=True, # Be lenient with @type names
-                homogenize_fields=False # Do not change field keys during initial parse
-            )
-            try:
-                bib_database = bibtexparser.loads(bib_content_str, parser=parser)
-            except Exception as e_load:
-                print(f"CRITICAL ERROR during bibtexparser.loads() in 'simple' mode: {e_load}")
-                print("This suggests a fundamental parsing issue with an entry's syntax that even the simplest parser mode could not handle.")
-                print("Consider trying to validate the BibTeX file or identify problematic entries manually.")
-                return 0 # Abort if even the simplest load fails
-
-            if bib_database and bib_database.entries:
-                print("Initial parsing successful with simple mode. Now applying customizations entry by entry...")
-                customized_entries = []
-                for entry_idx, original_entry in enumerate(bib_database.entries):
-                    # Work on a copy to avoid modifying the list being iterated over if not careful
-                    current_entry = dict(original_entry)
-                    try:
-                        # 1. Homogenize field keys to lowercase manually
-                        # This ensures consistency before other steps and for extract_info_from_bib_entry
-                        current_entry = {k.lower(): v for k, v in current_entry.items()}
-
-                        # 2. Apply standard BibTeX customizations (homogenize_latex_encoding, latex_to_unicode)
-                        # These are applied to the dictionary representing the current entry.
-                        current_entry = preprocess_bibtex_entry(current_entry)
-
-                        customized_entries.append(current_entry)
-                    except AttributeError as e_attr:
-                        # Try to get ID from lowercased keys if available, else from original
-                        problematic_id_dict = {k.lower(): v for k, v in original_entry.items()}
-                        problematic_id = problematic_id_dict.get("id", original_entry.get("ID", "N/A"))
-                        print(f"WARNING: AttributeError during manual customization of entry ID '{problematic_id}' (index {entry_idx}): {e_attr}")
-                        print(f"  Problematic entry data (original, before error): {original_entry}")
-                        customized_entries.append({k.lower(): v for k, v in original_entry.items()}) # Add original (with lowercased keys) if customization fails
-                    except Exception as e_custom:
-                        problematic_id_dict = {k.lower(): v for k, v in original_entry.items()}
-                        problematic_id = problematic_id_dict.get("id", original_entry.get("ID", "N/A"))
-                        print(f"WARNING: General error during manual customization of entry ID '{problematic_id}' (index {entry_idx}): {e_custom}")
-                        customized_entries.append({k.lower(): v for k, v in original_entry.items()}) # Add original (with lowercased keys)
-                bib_database.entries = customized_entries
-        else: # Default mode
-            print("Using 'default' parser mode.")
-            parser = BibTexParser(common_strings=True)
-            parser.customization = preprocess_bibtex_entry # This will be called for each entry by .loads()
-            parser.ignore_nonstandard_types = False
-            parser.homogenize_fields = True # Field keys will be lowercased by the parser
-            bib_database = bibtexparser.loads(bib_content_str, parser=parser)
+            bib_database = _parse_with_simple_mode(bib_content_str)
+        else:  # Default mode
+            bib_database = _parse_with_default_mode(bib_content_str)
 
         if not bib_database or not bib_database.entries:
             print("No entries found in the BibTeX file after parsing and customization.")
             return 0
 
-        print(f"Found {len(bib_database.entries)} entries. Processing and writing to {output_jsonl_path}...")
+        print(f"Found {len(bib_database.entries)} entries. "
+              f"Processing and writing to {output_jsonl_path}...")
 
-        count = 0
-        current_file_mode = "w" if overwrite_flag else "a"
-        # If appending but file doesn't exist, 'a' mode will create it, so 'w' is only for explicit overwrite.
-        if not os.path.exists(output_jsonl_path): # If file doesn't exist, 'a' acts like 'w' for creation
-            current_file_mode = "w"
-
-
-        with open(output_jsonl_path, current_file_mode, encoding="utf-8") as outfile:
-            for entry_idx, entry in enumerate(bib_database.entries): # Use enumerate for better error reporting
-                try:
-                    # Ensure keys are lowercase for extract_info_from_bib_entry if not already done by parser
-                    # (homogenize_fields=True in default, manual in simple)
-                    normalized_entry = {k.lower(): v for k,v in entry.items()} if parser_mode == "simple" and not getattr(parser, "homogenize_fields", False) else entry
-
-                    paper_info = extract_info_from_bib_entry(normalized_entry)
-                    outfile.write(json.dumps(paper_info) + "\n")
-                    count += 1
-                    if count % 1000 == 0:
-                        print(f"  Processed {count} entries...")
-                except Exception as e:
-                    problematic_id = "N/A"
-                    if isinstance(entry, dict): # entry should be a dict
-                        problematic_id = entry.get("id", entry.get("ID", "N/A")) # Check both cases
-                    print(f"Error writing entry ID '{problematic_id}' (index {entry_idx}) to JSON: {e}")
-                    # print(f"  Problematic entry data being written: {paper_info}") # Careful, paper_info might be partial
+        # Write entries to JSONL
+        parser = BibTexParser()  # Create parser object for _write_entries_to_jsonl
+        count = _write_entries_to_jsonl(
+            bib_database.entries, 
+            output_jsonl_path, 
+            parser_mode, 
+            parser, 
+            overwrite_flag
+        )
 
         print(f"\nSuccessfully processed and wrote {count} entries to {output_jsonl_path}.")
         return count
@@ -177,7 +308,7 @@ def process_bibtex_file(input_bib_path, output_jsonl_path, is_gzipped, parser_mo
     except FileNotFoundError:
         print(f"Error: Input file '{input_bib_path}' not found.")
         return 0
-    except TypeError as e: # Catch the TypeError we might raise from input_bib_path check
+    except TypeError as e:
         print(f"Configuration or Type Error: {e}")
         return 0
     except Exception as e:
@@ -209,19 +340,17 @@ if __name__ == "__main__":
     print(f"Input BibTeX File: {input_file}")
     print(f"Output JSONL File: {output_file}")
 
-    #is_gzipped_input = input_file.endswith('.gz')
+    # is_gzipped_input = input_file.endswith('.gz')
     is_gzipped_input = False
 
     if not args.overwrite and os.path.exists(output_file):
         print(f"Output file '{output_file}' already exists. Appending. Use --overwrite to overwrite.")
     elif args.overwrite and os.path.exists(output_file):
-         print(f"Output file '{output_file}' will be overwritten.")
+        print(f"Output file '{output_file}' will be overwritten.")
     else:
         print(f"Creating new output file '{output_file}'.")
 
-
     process_bibtex_file(input_file, output_file, is_gzipped_input, "simple", False)
-
 
     print("----------------------")
     print("Script finished.")
