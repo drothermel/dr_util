@@ -107,7 +107,6 @@ extend-select = [
     "C90",
     "D",
     "DTZ",
-    "DOC",
     "FA",
     "PLW",
     "PLE",
@@ -133,8 +132,6 @@ ignore = [
     "NPY002", # don't use np.random.seed, I don't trust myself to remember
     "S101",
     "ANN001",
-    "ANN101",
-    "ANN102",
     "ANN201",
     "D100",
     "D103",
