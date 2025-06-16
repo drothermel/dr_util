@@ -1,5 +1,7 @@
+from typing import Any
+
 import torch
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Dataset
 from torchvision import datasets, transforms
 
 import dr_util.determinism_utils as dtu
@@ -9,12 +11,12 @@ DEFAULT_TRANSFORM = None
 
 
 def get_cifar_dataset(
-    dataset_name,
-    source_split,  # the official split (train or test)
-    root,
-    transform=DEFAULT_TRANSFORM,
-    download=DEFAULT_DOWNLOAD,
-):
+    dataset_name: str,
+    source_split: str,  # the official split (train or test)
+    root: str,
+    transform: Any | None = DEFAULT_TRANSFORM,
+    download: bool = DEFAULT_DOWNLOAD,
+) -> Dataset[Any]:
     """Loads a specified dataset (CIFAR-10 or CIFAR-100).
 
     Args:
@@ -55,12 +57,12 @@ class TransformedSubset(torch.utils.data.Dataset):
     that can be set after creation.
     """
 
-    def __init__(self, subset, transform=None) -> None:
+    def __init__(self, subset: Dataset[Any], transform: Any | None = None) -> None:
         """Initialize with a subset and optional transform."""
         self.subset = subset
         self.transform = transform
 
-    def __getitem__(self, index) -> tuple:
+    def __getitem__(self, index: int) -> tuple[Any, Any]:
         """Get item at index with optional transform applied."""
         x, y = self.subset[index]  # Subset returns data from the original dataset
         if self.transform:
@@ -72,7 +74,7 @@ class TransformedSubset(torch.utils.data.Dataset):
         return len(self.subset)
 
 
-def get_tensor_transform():
+def get_tensor_transform() -> transforms.Compose:
     return transforms.Compose(
         [
             transforms.ToTensor(),
@@ -80,18 +82,18 @@ def get_tensor_transform():
     )
 
 
-def apply_tensor_transform(data):
+def apply_tensor_transform(data: Any) -> torch.Tensor:
     return transforms.functional.to_tensor(data)
 
 
 def get_dataloader(
-    dataset,
-    transform,
-    batch_size,
-    shuffle,
-    generator,
-    num_workers,
-):
+    dataset: Dataset[Any],
+    transform: Any | None,
+    batch_size: int,
+    shuffle: bool,
+    generator: torch.Generator,
+    num_workers: int,
+) -> DataLoader[Any]:
     dataset_transformed = TransformedSubset(dataset, transform=transform)
     return DataLoader(
         dataset_transformed,
@@ -103,7 +105,7 @@ def get_dataloader(
     )
 
 
-def split_data(dataset, ratio, data_split_seed=None):
+def split_data(dataset: Dataset[Any], ratio: float, data_split_seed: int | None = None) -> tuple[Dataset[Any], Dataset[Any]]:
     split_generator = torch.Generator()
     if data_split_seed is not None:
         split_generator.manual_seed(data_split_seed)

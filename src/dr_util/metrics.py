@@ -1,4 +1,5 @@
 import logging
+from collections.abc import Callable
 from enum import Enum
 from functools import singledispatchmethod
 from typing import Any, Union
@@ -43,20 +44,20 @@ class HydraLogger:
         self.pretty_log_dict = False
 
     @singledispatchmethod
-    def log(self, value):
+    def log(self, value: Any) -> None:
         """Log a value using the appropriate logging method."""
         logging.info(str(value))
 
     @log.register(str)
-    def _(self, value) -> None:
+    def _(self, value: str) -> None:
         logging.info(value)
 
     @log.register(DictConfig)
-    def _(self, value) -> None:
+    def _(self, value: DictConfig) -> None:
         pu.log_cfg_str(value)
 
     @log.register(list)
-    def _(self, value) -> None:
+    def _(self, value: list[Any]) -> None:
         if len(value) > 0 and all(isinstance(v, str) for v in value):
             # Assume its a block of text, print directly as such
             # Extra newlines to avoid indent mismatch
@@ -65,7 +66,7 @@ class HydraLogger:
             logging.info(str(value))
 
     @log.register(dict)
-    def _(self, value) -> None:
+    def _(self, value: dict[str, Any]) -> None:
         if self.pretty_log_dict:
             dict_str = pu.get_dict_str(value, indent=2)
             logging.info(dict_str)
@@ -93,18 +94,18 @@ class JsonLogger:
         logging.info(f"    - output path: {self.path}")
 
     @singledispatchmethod
-    def log(self, value):
+    def log(self, value: Any) -> None:
         """Log a value using singledispatch based on type."""
         if self.writer is not None:
             self.writer.write({"type": type(value).__name__, "value": value})
 
     @log.register(dict)
-    def _(self, value) -> None:
+    def _(self, value: dict[str, Any]) -> None:
         if self.writer is not None:
             self.writer.write(value)
 
     @log.register(DictConfig)
-    def _(self, value) -> None:
+    def _(self, value: DictConfig) -> None:
         if self.writer is not None:
             resolved_val = OmegaConf.to_container(value, resolve=True)
             self.writer.write({"type": "dict_config", "value": resolved_val})
@@ -169,9 +170,9 @@ class MetricsSubgroup:
         self.name = name
         self.metrics = metrics
         self.data_structure = cfg.metrics.init
-        self.data = {}
-        self.add_fxns = {}
-        self.agg_fxns = {}
+        self.data: dict[str, Any] = {}
+        self.add_fxns: dict[str, Callable[[dict[str, Any], str, Any], None]] = {}
+        self.agg_fxns: dict[str, Callable[[dict[str, Any], str], Any]] = {}
 
         self._init_data()
 

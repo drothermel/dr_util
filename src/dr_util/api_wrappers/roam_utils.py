@@ -3,7 +3,7 @@
 
 import logging
 import re
-from typing import NoReturn
+from typing import Any, NoReturn
 
 import requests
 from schema import And, Optional, Or, Schema
@@ -19,11 +19,11 @@ RETRY_ERROR = 503
 class RoamBackendClient:
     """Client for interacting with the Roam Research backend API."""
 
-    def __init__(self, token, graph) -> None:
+    def __init__(self, token: str, graph: str) -> None:
         """Initialize the client with authentication token and graph name."""
         self.__token = token
         self.graph = graph
-        self.__cache = {}
+        self.__cache: dict[str, str] = {}
 
     def _error_message(self, status_code: int, response_json: str) -> NoReturn:
         if status_code == HTTP_500_ERROR:
@@ -54,7 +54,7 @@ class RoamBackendClient:
             },
         )
 
-    def call(self, path, method, body):
+    def call(self, path: str, method: str, body: dict[str, Any]) -> requests.Response:
         """Call the Roam API with given path, method, and body."""
         url, method, headers = self.__make_request(path, body, method)
         resp = requests.post(
@@ -80,7 +80,7 @@ class RoamBackendClient:
         return resp
 
 
-def q(client: RoamBackendClient, query: str, args=None):
+def q(client: RoamBackendClient, query: str, args: Any = None) -> Any:
     path = "/api/graph/" + client.graph + "/q"
     body = {"query": query}
     if args is not None:
@@ -90,7 +90,7 @@ def q(client: RoamBackendClient, query: str, args=None):
     return result["result"]
 
 
-def pull(client: RoamBackendClient, pattern: str, eid: str):
+def pull(client: RoamBackendClient, pattern: str, eid: str) -> Any:
     path = "/api/graph/" + client.graph + "/pull"
     body = {"eid": eid, "selector": pattern}
     resp = client.call(path, "POST", body)
@@ -98,7 +98,7 @@ def pull(client: RoamBackendClient, pattern: str, eid: str):
     return result["result"]
 
 
-def pull_many(client: RoamBackendClient, pattern: str, eids: str):
+def pull_many(client: RoamBackendClient, pattern: str, eids: str) -> Any:
     path = "/api/graph/" + client.graph + "/pull-many"
     body = {"eids": eids, "selector": pattern}
     resp = client.call(path, "POST", body)
@@ -128,7 +128,7 @@ roam_create_block = Schema(
 )
 
 
-def create_block(client: RoamBackendClient, body):
+def create_block(client: RoamBackendClient, body: dict[str, Any]) -> int:
     body["action"] = "create-block"
     path = "/api/graph/" + client.graph + "/write"
     resp = client.call(path, "POST", roam_create_block.validate(body))
@@ -144,7 +144,7 @@ roam_move_block = Schema(
 )
 
 
-def move_block(client: RoamBackendClient, body):
+def move_block(client: RoamBackendClient, body: dict[str, Any]) -> int:
     body["action"] = "move-block"
     path = "/api/graph/" + client.graph + "/write"
     resp = client.call(path, "POST", roam_move_block.validate(body))
@@ -166,7 +166,7 @@ roam_update_block = Schema(
 )
 
 
-def update_block(client: RoamBackendClient, body):
+def update_block(client: RoamBackendClient, body: dict[str, Any]) -> int:
     body["action"] = "update-block"
     path = "/api/graph/" + client.graph + "/write"
     resp = client.call(path, "POST", roam_update_block.validate(body))
@@ -178,7 +178,7 @@ roam_delete_block = Schema(
 )
 
 
-def delete_block(client: RoamBackendClient, body):
+def delete_block(client: RoamBackendClient, body: dict[str, Any]) -> int:
     body["action"] = "delete-block"
     path = "/api/graph/" + client.graph + "/write"
     resp = client.call(path, "POST", roam_delete_block.validate(body))
@@ -197,7 +197,7 @@ roam_create_page = Schema(
 )
 
 
-def create_page(client: RoamBackendClient, body):
+def create_page(client: RoamBackendClient, body: dict[str, Any]) -> int:
     body["action"] = "create-page"
     path = "/api/graph/" + client.graph + "/write"
     resp = client.call(path, "POST", roam_create_page.validate(body))
@@ -216,7 +216,7 @@ roam_update_page = Schema(
 )
 
 
-def update_page(client: RoamBackendClient, body):
+def update_page(client: RoamBackendClient, body: dict[str, Any]) -> int:
     body["action"] = "update-page"
     path = "/api/graph/" + client.graph + "/write"
     resp = client.call(path, "POST", roam_update_page.validate(body))
@@ -228,7 +228,7 @@ roam_delete_page = Schema(
 )
 
 
-def delete_page(client: RoamBackendClient, body):
+def delete_page(client: RoamBackendClient, body: dict[str, Any]) -> int:
     body["action"] = "delete-page"
     path = "/api/graph/" + client.graph + "/write"
     resp = client.call(path, "POST", roam_delete_page.validate(body))
@@ -238,6 +238,6 @@ def delete_page(client: RoamBackendClient, body):
 init_graph = Schema({"graph": str, "token": str})
 
 
-def initialize_graph(inp):
+def initialize_graph(inp: dict[str, str]) -> RoamBackendClient:
     init_graph.validate(inp)
     return RoamBackendClient(inp["token"], inp["graph"])
