@@ -145,7 +145,9 @@ def agg_batch_weighted_list_avg(data: dict[str, Any], key: str) -> float:
 class MetricsSubgroup:
     """Handles metrics collection for a specific group (e.g., train, val)."""
 
-    def __init__(self, cfg: DictConfig, name: str = "", metrics: Any | None = None) -> None:  # noqa: ANN401
+    def __init__(
+        self, cfg: DictConfig, name: str = "", metrics: Any | None = None
+    ) -> None:
         """Initialize MetricsSubgroup.
 
         Args:

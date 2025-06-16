@@ -41,7 +41,8 @@ OPENREVIEW_API_ENDPOINTS = {
     "iclr_2022_oral": "https://api.openreview.net/notes?content.venue=ICLR+2022+Oral&details=replyCount&offset=0&limit=50&invitation=ICLR.cc%2F2022%2FConference%2F-%2FBlind_Submission",
 
     # ICLR 2021
-    # For 2021 and 2020, the URLs are identical except for the offset, indicating they point to the same base query.
+    # For 2021 and 2020, the URLs are identical except for the offset,
+    # indicating they point to the same base query.
     # We only need one entry for the base URL.
     "iclr_2021_conference_submissions": "https://api.openreview.net/notes?invitation=ICLR.cc%2F2021%2FConference%2F-%2FBlind_Submission&details=replyCount%2Cinvitation%2Coriginal%2CdirectReplies&limit=1000&offset=0",
 
@@ -57,7 +58,9 @@ def extract_paper_data(note):
 
     # Helper to safely get values from nested dictionaries
     def get_value(data_dict, key, default=None):
-        return data_dict.get(key, {}).get("value", default) if isinstance(data_dict.get(key), dict) else data_dict.get(key, default)
+        if isinstance(data_dict.get(key), dict):
+            return data_dict.get(key, {}).get("value", default)
+        return data_dict.get(key, default)
 
     return {
         "id": note.get("id"),
@@ -71,14 +74,14 @@ def extract_paper_data(note):
         "venue_id": get_value(content, "venueid"),
         "bibtex": get_value(content, "_bibtex"),
         "blogpost_url": get_value(content, "blogpost_url"), # From example
-        "pdf_url": get_value(content, "pdf"), # Common field, might not be in all 'content'
+        "pdf_url": get_value(content, "pdf"),  # Common field
         "html_url": get_value(content, "html"), # Common field
         "cdate": note.get("cdate"), # Creation date of the note itself
         "mdate": note.get("mdate"), # Modification date
-        "odate": note.get("odate"), # Original submission date (often same as cdate for first version)
+        "odate": note.get("odate"),  # Original submission date
         "tcdate": note.get("tcdate"), # True creation date
         "tmdate": note.get("tmdate"), # True modification date
-        "original_note_content": content # Store the whole content for further analysis if needed
+        "original_note_content": content  # Store whole content for analysis
         # Add any other fields from 'note' or 'note.content' you need
     }
 
@@ -94,8 +97,10 @@ def fetch_and_save_data(api_base_url, output_file_handle, limit_per_request):
 
     while True:
         # Construct the full API URL with limit and offset
-        # Ensure the base URL doesn't already have limit/offset if it's configurable later
-        paginated_url = f"{api_base_url}&limit={limit_per_request}&offset={current_offset}"
+        # Ensure the base URL doesn't already have limit/offset
+        paginated_url = (
+            f"{api_base_url}&limit={limit_per_request}&offset={current_offset}"
+        )
 
         print(f"  Fetching: {paginated_url}")
 
@@ -103,7 +108,8 @@ def fetch_and_save_data(api_base_url, output_file_handle, limit_per_request):
             headers = {
                 "User-Agent": "OpenReviewAPIExtractor/1.0"
             }
-            response = requests.get(paginated_url, headers=headers, timeout=30) # Increased timeout for potentially larger responses
+            # Increased timeout for potentially larger responses
+            response = requests.get(paginated_url, headers=headers, timeout=30)
             response.raise_for_status()  # Raise an exception for HTTP errors
 
             data = response.json()
@@ -118,14 +124,22 @@ def fetch_and_save_data(api_base_url, output_file_handle, limit_per_request):
 
             if not notes:
                 print("  No more notes returned by the API.")
-                if total_expected_count is not None and total_processed_count < total_expected_count:
-                    print(f"  WARNING: Processed {total_processed_count} items, but API reported {total_expected_count}. There might be an issue or API limit.")
+                if (
+            total_expected_count is not None
+            and total_processed_count < total_expected_count
+        ):
+                    print(
+                f"  WARNING: Processed {total_processed_count} items, but API "
+                f"reported {total_expected_count}. There might be an issue or "
+                f"API limit."
+            )
                 break
 
             for note in notes:
                 try:
                     paper_data = extract_paper_data(note)
-                    json_string = json.dumps(paper_data) # No custom converter needed if data is basic types
+                    # No custom converter needed if data is basic types
+                    json_string = json.dumps(paper_data)
                     output_file_handle.write(json_string + "\n")
                     total_processed_count += 1
                 except Exception as e:

@@ -53,8 +53,8 @@ def extract_paper_info_from_cvf(html_content, page_url):
         else:
             # If no anchor, might be an issue with the structure or an empty dt
             print(
-                f"Warning: Could not find title anchor for a <dt class='ptitle'> element. "
-                f"Content: {dt_title.get_text(strip=True)}"
+                f"Warning: Could not find title anchor for a <dt class='ptitle'> "
+                f"element. Content: {dt_title.get_text(strip=True)}"
             )
             continue # Skip this entry if title can't be found
 
@@ -166,7 +166,8 @@ if __name__ == "__main__":
             print("No papers found on the page or an issue occurred during parsing.")
         else:
             print(
-                f"Successfully extracted information for {len(extracted_papers)} papers."
+                f"Successfully extracted information for "
+                f"{len(extracted_papers)} papers."
             )
 
             file_mode = "a"
