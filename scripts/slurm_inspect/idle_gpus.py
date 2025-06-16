@@ -2,16 +2,21 @@ import re
 import subprocess
 from collections import defaultdict
 
+# Constants
+MIN_HEADER_LINES = 2
+MIN_PARTS_COUNT = 3
+
 
 def get_sinfo():
-    process = subprocess.Popen(["sinfo", "-lNe"], stdout=subprocess.PIPE, text=True)
-    stdout, stderr = process.communicate()
-    assert process.returncode == 0, f"Error executing sinfo: {stderr}"
+    result = subprocess.run(
+        ["sinfo", "-lNe"], capture_output=True, text=True, check=True
+    )
+    stdout = result.stdout
     lines = stdout.strip().split("\n")
     # Drop the headers before returning the lines
-    if len(lines) <= 2:
+    if len(lines) <= MIN_HEADER_LINES:
         return []
-    return lines[2:]
+    return lines[MIN_HEADER_LINES:]
 
 def parse_sinfo(sinfo_lines, node_parser):
     node_info = defaultdict(lambda: {"nodes": set(), "partitions": set()})
@@ -20,7 +25,7 @@ def parse_sinfo(sinfo_lines, node_parser):
     for line in sinfo_lines:
         parts = line.strip().split()
         # aggregate gpu node info only
-        if len(parts) < 3 or "nvidia" not in parts[-2]:
+        if len(parts) < MIN_PARTS_COUNT or "nvidia" not in parts[-2]:
             continue
         node_list = parts[0]
         partition = parts[2]
@@ -35,13 +40,19 @@ def parse_sinfo(sinfo_lines, node_parser):
 def print_idle_gpu_by_node_type(node_info):
     print("Idle GPU Node Information (Grouped by Node Type):")
     if not node_info:
-        print("  No idle GPU nodes with 'nvidia' found or no nodes matched the type pattern.")
+        print(
+            "  No idle GPU nodes with 'nvidia' found or no nodes "
+            "matched the type pattern."
+        )
     else:
         for node_type, info in sorted(node_info.items()):
             node_count = len(info["nodes"])
-            partitions_list = sorted(list(info["partitions"]))
+            partitions_list = sorted(info["partitions"])
             partitions_str = ", ".join(partitions_list) if partitions_list else "N/A"
-            print(f"  {node_type}: {node_count} unique node(s) (Associated Partitions: {partitions_str})")
+            print(
+                f"  {node_type}: {node_count} unique node(s) "
+                f"(Associated Partitions: {partitions_str})"
+            )
 
 def print_idle_gpu_by_partition_type(partition_info, node_parser):
     print("\nIdle GPU Node Information (Grouped by Partition):")
@@ -59,8 +70,15 @@ def print_idle_gpu_by_partition_type(partition_info, node_parser):
                 if match_node_type:
                     node_types_in_this_partition.add(match_node_type.group(1))
 
-            node_types_str = ", ".join(sorted(list(node_types_in_this_partition))) if node_types_in_this_partition else "N/A"
-            print(f"  {partition_name}: {node_count} unique node(s) (Node Types: {node_types_str})")
+            node_types_str = (
+                ", ".join(sorted(node_types_in_this_partition))
+                if node_types_in_this_partition
+                else "N/A"
+            )
+            print(
+                f"  {partition_name}: {node_count} unique node(s) "
+                f"(Node Types: {node_types_str})"
+            )
 
 
 

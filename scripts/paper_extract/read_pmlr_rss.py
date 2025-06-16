@@ -9,9 +9,10 @@
 
 import argparse
 import json
-import os  # For checking if file exists
 import re
+import sys
 import time
+from pathlib import Path
 
 import feedparser
 import requests
@@ -231,7 +232,7 @@ def process_entries_to_jsonl(
             json_string = json.dumps(entry_data, default=json_converter)
             output_file_handle.write(json_string + "\n")
             entries_processed_count += 1
-        except Exception as e:
+        except (TypeError, ValueError, KeyError) as e:
             print(f"    Error serializing entry {i+1} for Volume {volume_number}: {e}")
 
     return entries_processed_count
@@ -257,7 +258,9 @@ def process_volume_to_jsonl(volume_number, output_file_handle):
 
     # Extract conference metadata
     conference_metadata = extract_conference_metadata(feed)
-    conference_short_name, conference_year, conference_title_from_feed = conference_metadata
+    conference_short_name, conference_year, conference_title_from_feed = (
+        conference_metadata
+    )
 
     print(
         f"  Extracted Conference Info: Name='{conference_short_name}', "
@@ -269,14 +272,20 @@ def process_volume_to_jsonl(volume_number, output_file_handle):
         feed, conference_metadata, output_file_handle, volume_number
     )
 
-    print(f"  Successfully processed {entries_processed_count} entries for Volume {volume_number}.")
+    print(
+        f"  Successfully processed {entries_processed_count} entries "
+        f"for Volume {volume_number}."
+    )
     return entries_processed_count
 
 # --- Main Execution ---
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="PMLR Multi-Volume RSS to JSONL Extractor (with Conference Metadata & Field Dropping)",
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter # Shows default values in help
+        description=(
+            "PMLR Multi-Volume RSS to JSONL Extractor "
+            "(with Conference Metadata & Field Dropping)"
+        ),
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter  # Shows defaults
     )
     parser.add_argument(
         "-s", "--start-volume",
@@ -293,7 +302,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--overwrite",
         action="store_true", # Becomes True if flag is present
-        help="Overwrite the output file if it exists, otherwise append (or create if new)."
+        help="Overwrite the output file if it exists, otherwise append."
     )
 
     args = parser.parse_args()
@@ -306,7 +315,10 @@ if __name__ == "__main__":
 
     # drotherm/repos/dr_util/scripts/read_rss.py
     # drotherm/data/rss_paper_data/
-    OUTPUT_FILENAME = f"../../../data/rss_paper_data/pmlr_papers.v{start_volume}.v{end_volume}.t{TRIAL}.jsonl"
+    OUTPUT_FILENAME = (
+        f"../../../data/rss_paper_data/pmlr_papers."
+        f"v{start_volume}.v{end_volume}.t{TRIAL}.jsonl"
+    )
 
     print(f"Will process volumes from {start_volume} to {end_volume}.")
     print(f"Output will be saved to: {OUTPUT_FILENAME}")
@@ -314,16 +326,20 @@ if __name__ == "__main__":
 
 
     file_mode = "a"
-    if os.path.exists(OUTPUT_FILENAME):
+    output_path = Path(OUTPUT_FILENAME)
+    if output_path.exists():
         while True:
-            choice = input(f"File '{OUTPUT_FILENAME}' already exists. (A)ppend, (O)verwrite, or (Q)uit? [A/O/Q]: ").strip().lower()
+            choice = input(
+                f"File '{OUTPUT_FILENAME}' already exists. "
+                "(A)ppend, (O)verwrite, or (Q)uit? [A/O/Q]: "
+            ).strip().lower()
             if choice == "o":
                 file_mode = "w"
                 print(f"Output file '{OUTPUT_FILENAME}' will be overwritten.")
                 break
             elif choice == "q":
                 print("Exiting.")
-                exit()
+                sys.exit()
             elif choice == "a":
                 print(f"Appending to existing file '{OUTPUT_FILENAME}'.")
                 break
@@ -334,12 +350,15 @@ if __name__ == "__main__":
         print(f"Creating new output file '{OUTPUT_FILENAME}'.")
 
     total_entries_overall = 0
-    with open(OUTPUT_FILENAME, file_mode, encoding="utf-8") as outfile:
+    with output_path.open(file_mode, encoding="utf-8") as outfile:
         for volume in range(start_volume, end_volume + 1):
             entries_from_volume = process_volume_to_jsonl(volume, outfile)
             total_entries_overall += entries_from_volume
             if volume < end_volume:
-                print(f"  Waiting for {DELAY_BETWEEN_VOLUMES} seconds before next volume...")
+                print(
+                    f"  Waiting for {DELAY_BETWEEN_VOLUMES} seconds "
+                    "before next volume..."
+                )
                 time.sleep(DELAY_BETWEEN_VOLUMES)
 
     print("-" * 70)
