@@ -50,7 +50,7 @@ def get_cifar_dataset(
 
 class TransformedSubset(torch.utils.data.Dataset):
     """A wrapper for a torch.utils.data.Subset that applies a transform.
-    
+
     This is useful because Subsets themselves don't have a transform attribute
     that can be set after creation.
     """

@@ -177,9 +177,9 @@ def loadjsonl(pl_path: Path) -> list[Any]:
     return list(jsonlines.open(pl_path).iter(skip_empty=True))
 
 
-def loadpkl(pl_path: Path) -> Any:  # noqa: ANN401, S301
+def loadpkl(pl_path: Path) -> Any:  # noqa: ANN401
     """Load pickle file.
-    
+
     WARNING: Only use with trusted data - pickle can execute arbitrary code.
     """
     return pickle.load(pl_path.open(mode="rb"))  # noqa: S301

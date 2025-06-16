@@ -248,7 +248,8 @@ if __name__ == "__main__":
         "--overwrite",
         action="store_true",
         help=(
-            "Overwrite the output file if it exists, otherwise append (or create if new)."
+            "Overwrite the output file if it exists, "
+            "otherwise append (or create if new)."
         ),
     )
 
