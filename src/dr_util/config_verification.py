@@ -10,7 +10,7 @@ from omegaconf import DictConfig, OmegaConf
 
 
 @singledispatch
-def cfg_to_loggable_lines(cfg: Any) -> list[str]:
+def cfg_to_loggable_lines(cfg: Any) -> list[str]:  # noqa: ANN401
     logging.warning(f">> Unexpected cfg type: {type(cfg)}")
     return [str(cfg)]  # default, just stringify
 
@@ -28,7 +28,7 @@ def _(cfg: DictConfig) -> list[str]:
     return cfg_str.strip("\n").split("\n")
 
 
-def get_cfg_str(cfg: Any) -> str:
+def get_cfg_str(cfg: Any) -> str:  # noqa: ANN401
     return "\n".join(
         [
             "\n",
@@ -45,7 +45,7 @@ def get_cfg_str(cfg: Any) -> str:
 # ---------------------------------------------------------
 
 
-def validate_cfg(cfg: DictConfig, config_type: str, schema_fxn: Any) -> bool:
+def validate_cfg(cfg: DictConfig, config_type: str, schema_fxn: Any) -> bool:  # noqa: ANN401
     # Select the schema to validate with
     schema_cls = schema_fxn(config_type)
     if schema_cls is None:
@@ -64,5 +64,7 @@ def validate_cfg(cfg: DictConfig, config_type: str, schema_fxn: Any) -> bool:
 def get_bad_keys_by_schema(cfg: DictConfig, schema_cls: type) -> list[str]:
     input_dict = OmegaConf.to_container(cfg, resolve=True)
     assert isinstance(input_dict, dict), "Expected dict from OmegaConf.to_container"
-    input_data_class = schema_cls(**cast(dict[str, Any], input_dict), class_name="Top Level Config")
+    input_data_class = schema_cls(
+        **cast(dict[str, Any], input_dict), class_name="Top Level Config"
+    )
     return list(input_data_class.missing_or_invalid_keys)

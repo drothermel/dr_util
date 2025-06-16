@@ -1,8 +1,10 @@
 import logging
-from collections.abc import Callable
 from enum import Enum
 from functools import singledispatchmethod
-from typing import Any, Union, cast
+from typing import TYPE_CHECKING, Any, Union, cast
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 import jsonlines
 from omegaconf import DictConfig, OmegaConf
@@ -44,7 +46,7 @@ class HydraLogger:
         self.pretty_log_dict = False
 
     @singledispatchmethod
-    def log(self, value: Any) -> None:
+    def log(self, value: Any) -> None:  # noqa: ANN401
         """Log a value using the appropriate logging method."""
         logging.info(str(value))
 
@@ -94,7 +96,7 @@ class JsonLogger:
         logging.info(f"    - output path: {self.path}")
 
     @singledispatchmethod
-    def log(self, value: Any) -> None:
+    def log(self, value: Any) -> None:  # noqa: ANN401
         """Log a value using singledispatch based on type."""
         if self.writer is not None:
             self.writer.write({"type": type(value).__name__, "value": value})
@@ -248,7 +250,7 @@ class Metrics:
         self.groups = {name: MetricsSubgroup(cfg, name) for name in self.group_names}
         self.loggers = [create_logger(cfg, lt) for lt in cfg.metrics.loggers]
 
-    def log(self, value: Any) -> None:  # noqa: ANN401
+    def log(self, value: Any) -> None:  # noqa: ANN401  # noqa: ANN401
         """Log a value to all configured loggers.
 
         Args:

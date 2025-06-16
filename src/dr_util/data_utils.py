@@ -14,7 +14,8 @@ def get_cifar_dataset(
     dataset_name: str,
     source_split: str,  # the official split (train or test)
     root: str,
-    transform: Any | None = DEFAULT_TRANSFORM,
+    transform: Any | None = DEFAULT_TRANSFORM,  # noqa: ANN401
+    *,
     download: bool = DEFAULT_DOWNLOAD,
 ) -> Dataset[Any]:
     """Loads a specified dataset (CIFAR-10 or CIFAR-100).
@@ -57,7 +58,7 @@ class TransformedSubset(torch.utils.data.Dataset[Any]):
     that can be set after creation.
     """
 
-    def __init__(self, subset: Dataset[Any], transform: Any | None = None) -> None:
+    def __init__(self, subset: Dataset[Any], transform: Any | None = None) -> None:  # noqa: ANN401
         """Initialize with a subset and optional transform."""
         self.subset = subset
         self.transform = transform
@@ -82,14 +83,15 @@ def get_tensor_transform() -> transforms.Compose:
     )
 
 
-def apply_tensor_transform(data: Any) -> torch.Tensor:
+def apply_tensor_transform(data: Any) -> torch.Tensor:  # noqa: ANN401
     return cast(torch.Tensor, transforms.functional.to_tensor(data))
 
 
 def get_dataloader(
     dataset: Dataset[Any],
-    transform: Any | None,
+    transform: Any | None,  # noqa: ANN401
     batch_size: int,
+    *,
     shuffle: bool,
     generator: torch.Generator,
     num_workers: int,
@@ -105,7 +107,9 @@ def get_dataloader(
     )
 
 
-def split_data(dataset: Dataset[Any], ratio: float, data_split_seed: int | None = None) -> tuple[Dataset[Any], Dataset[Any]]:
+def split_data(
+    dataset: Dataset[Any], ratio: float, data_split_seed: int | None = None
+) -> tuple[Dataset[Any], Dataset[Any]]:
     split_generator = torch.Generator()
     if data_split_seed is not None:
         split_generator.manual_seed(data_split_seed)

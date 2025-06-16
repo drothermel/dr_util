@@ -80,7 +80,7 @@ class RoamBackendClient:
         return resp
 
 
-def q(client: RoamBackendClient, query: str, args: Any = None) -> Any:
+def q(client: RoamBackendClient, query: str, args: Any = None) -> Any:  # noqa: ANN401
     path = "/api/graph/" + client.graph + "/q"
     body = {"query": query}
     if args is not None:
@@ -90,7 +90,7 @@ def q(client: RoamBackendClient, query: str, args: Any = None) -> Any:
     return result["result"]
 
 
-def pull(client: RoamBackendClient, pattern: str, eid: str) -> Any:
+def pull(client: RoamBackendClient, pattern: str, eid: str) -> Any:  # noqa: ANN401
     path = "/api/graph/" + client.graph + "/pull"
     body = {"eid": eid, "selector": pattern}
     resp = client.call(path, "POST", body)
@@ -98,7 +98,7 @@ def pull(client: RoamBackendClient, pattern: str, eid: str) -> Any:
     return result["result"]
 
 
-def pull_many(client: RoamBackendClient, pattern: str, eids: str) -> Any:
+def pull_many(client: RoamBackendClient, pattern: str, eids: str) -> Any:  # noqa: ANN401
     path = "/api/graph/" + client.graph + "/pull-many"
     body = {"eids": eids, "selector": pattern}
     resp = client.call(path, "POST", body)
