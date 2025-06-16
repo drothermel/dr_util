@@ -14,11 +14,15 @@ import dr_util.print_utils as pu
 
 
 class LoggerType(Enum):
+    """Enum for different logger types."""
+
     HYDRA = "hydra"
     JSON = "json"
 
 
-def create_logger(cfg: DictConfig, logger_type: str) -> Union["HydraLogger", "JsonLogger"]:
+def create_logger(
+    cfg: DictConfig, logger_type: str
+) -> Union["HydraLogger", "JsonLogger"]:
     match logger_type:
         case LoggerType.HYDRA.value:
             return HydraLogger(cfg)
@@ -31,6 +35,7 @@ class HydraLogger:
     """Logger that outputs to Hydra's logging system."""
 
     def __init__(self, cfg: DictConfig) -> None:
+        """Initialize HydraLogger."""
         # Hydra sets up the logging cfg at start of run
         self.type = LoggerType.HYDRA
         self.cfg = cfg
@@ -42,15 +47,15 @@ class HydraLogger:
         logging.info(str(value))
 
     @log.register(str)
-    def _(self, value):
+    def _(self, value) -> None:
         logging.info(value)
 
     @log.register(DictConfig)
-    def _(self, value):
+    def _(self, value) -> None:
         pu.log_cfg_str(value)
 
     @log.register(list)
-    def _(self, value):
+    def _(self, value) -> None:
         if len(value) > 0 and all(isinstance(v, str) for v in value):
             # Assume its a block of text, print directly as such
             # Extra newlines to avoid indent mismatch
@@ -59,7 +64,7 @@ class HydraLogger:
             logging.info(str(value))
 
     @log.register(dict)
-    def _(self, value):
+    def _(self, value) -> None:
         if self.pretty_log_dict:
             dict_str = pu.get_dict_str(value, indent=2)
             logging.info(dict_str)
@@ -71,6 +76,7 @@ class JsonLogger:
     """Logger that outputs to JSON lines file."""
 
     def __init__(self, cfg: DictConfig) -> None:
+        """Initialize JsonLogger."""
         self.type = LoggerType.JSON
         self.cfg = cfg
 
@@ -118,15 +124,15 @@ class MetricType(Enum):
     BATCH_WEIGHTED_AVG_LIST = "batch_weighted_avg_list"
 
 
-def add_sum(data: dict[str, Any], key: str, val: Any) -> None:
+def add_sum(data: dict[str, Any], key: str, val: Any) -> None:  # noqa: ANN401
     data[key] += val
 
 
-def add_list(data: dict[str, Any], key: str, val: Any) -> None:
+def add_list(data: dict[str, Any], key: str, val: Any) -> None:  # noqa: ANN401
     data[key].append(val)
 
 
-def agg_passthrough(data: dict[str, Any], key: str) -> Any:
+def agg_passthrough(data: dict[str, Any], key: str) -> Any:  # noqa: ANN401
     return data[key]
 
 
@@ -147,7 +153,7 @@ class MetricsSubgroup:
     """Handles metrics collection for a specific group (e.g., train, val)."""
 
     def __init__(
-        self, cfg: DictConfig, name: str = "", metrics: Any | None = None
+        self, cfg: DictConfig, name: str = "", metrics: Any | None = None  # noqa: ANN401
     ) -> None:
         """Initialize MetricsSubgroup.
 
@@ -184,14 +190,14 @@ class MetricsSubgroup:
                     self.add_fxns[key] = add_list
                     self.agg_fxns[key] = agg_batch_weighted_list_avg
 
-    def _add_tuple(self, key: str, val: Any) -> None:
+    def _add_tuple(self, key: str, val: Any) -> None:  # noqa: ANN401
         assert key in self.data, f">> Invalid Key: {key}"
         if val is None:
             return
         self.add_fxns[key](self.data, key, val)
 
     @singledispatchmethod
-    def add(self, data: Any, ns: int = 1) -> None:  # noqa: ARG002 (unused args)
+    def add(self, data: Any, ns: int = 1) -> None:  # noqa: ARG002, ANN401
         """Add data to metrics collection - base method for single dispatch."""
         assert False, f">> Unexpected data type: {type(data)}"
 
@@ -237,7 +243,7 @@ class Metrics:
         self.groups = {name: MetricsSubgroup(cfg, name) for name in self.group_names}
         self.loggers = [create_logger(cfg, lt) for lt in cfg.metrics.loggers]
 
-    def log(self, value: Any) -> None:
+    def log(self, value: Any) -> None:  # noqa: ANN401
         """Log a value to all configured loggers.
 
         Args:

@@ -7,6 +7,7 @@ import argparse
 import json
 import os
 import time
+from typing import Any
 from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
 
 import requests
@@ -58,7 +59,7 @@ def extract_paper_data(note):
     content = note.get("content", {})
 
     # Helper to safely get values from nested dictionaries
-    def get_value(data_dict, key, default=None) -> Any:
+    def get_value(data_dict, key, default=None) -> Any:  # noqa: ANN401
         if isinstance(data_dict.get(key), dict):
             return data_dict.get(key, {}).get("value", default)
         return data_dict.get(key, default)
@@ -143,20 +144,37 @@ def fetch_and_save_data(api_base_url, output_file_handle, limit_per_request):
                     output_file_handle.write(json_string + "\n")
                     total_processed_count += 1
                 except (KeyError, TypeError, ValueError) as e:
-                    print(f"    Error processing or serializing note ID {note.get('id', 'N/A')}: {e}")
+                    print(
+                        f"    Error processing or serializing note ID "
+                        f"{note.get('id', 'N/A')}: {e}"
+                    )
 
-            print(f"  Processed {len(notes)} notes in this batch. Total processed so far: {total_processed_count}")
+            print(
+                f"  Processed {len(notes)} notes in this batch. "
+                f"Total processed so far: {total_processed_count}"
+            )
 
-            current_offset += len(notes) # More robust than adding limit_per_request if API returns fewer than requested
+            # More robust than adding limit_per_request if API returns fewer
+            current_offset += len(notes)
 
             # Check if we've fetched all expected items or if offset implies we're done
-            if total_expected_count is not None and current_offset >= total_expected_count:
-                print("  Reached or exceeded total expected count based on offset. Assuming all data fetched.")
+            if (
+                total_expected_count is not None
+                and current_offset >= total_expected_count
+            ):
+                print(
+                    "  Reached or exceeded total expected count based on offset. "
+                    "Assuming all data fetched."
+                )
                 break
 
-            # Safety break if API keeps returning data without count or notes list becomes empty unexpectedly
+            # Safety break if API keeps returning data without count or notes
+            # list becomes empty unexpectedly
             if len(notes) < limit_per_request and total_expected_count is None:
-                 print("  API returned fewer items than requested and total count is unknown. Assuming end of data.")
+                 print(
+                     "  API returned fewer items than requested and total count "
+                     "is unknown. Assuming end of data."
+                 )
                  break
 
 
@@ -167,15 +185,20 @@ def fetch_and_save_data(api_base_url, output_file_handle, limit_per_request):
             continue # Retry the current offset
         except json.JSONDecodeError as e:
             print(f"  Error decoding JSON response at offset {current_offset}: {e}")
-            print(f"  Response text: {response.text[:200]}...") # Print beginning of problematic response
+            # Print beginning of problematic response
+            print(f"  Response text: {response.text[:200]}...")
             print("  Skipping this batch and continuing...")
-            current_offset += limit_per_request # Move to next offset to avoid getting stuck
+            # Move to next offset to avoid getting stuck
+            current_offset += limit_per_request
             # Consider a more robust retry or error logging strategy here
 
         # Be polite to the server
         time.sleep(DELAY_BETWEEN_REQUESTS)
 
-    print(f"\nFinished processing. Total items written to file: {total_processed_count}")
+    print(
+        f"\nFinished processing. Total items written to file: "
+        f"{total_processed_count}"
+    )
     if total_expected_count is not None and total_processed_count != total_expected_count:
          print(f"  Note: Final processed count ({total_processed_count}) does not match API's reported total ({total_expected_count}).")
 

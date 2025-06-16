@@ -26,7 +26,7 @@ def print_dict(dt: dict[str, Any], indent: int = 2) -> None:
     print(get_dict_str(dt, indent=indent))
 
 
-def print_dataclass(dc: Any) -> None:  # dataclass instance
+def print_dataclass(dc: Any) -> None:  # dataclass instance  # noqa: ANN401
     print("=========== Data Class ============")
     print_dict(asdict(dc))
     print("===================================")

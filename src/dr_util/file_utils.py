@@ -112,7 +112,13 @@ def load_files(path_list: list[str]) -> list[Any]:
     return all_file_data
 
 
-def dump_file(data: Any, path: str, force_suffix: str | None = None, *, verbose: bool = True) -> bool:
+def dump_file(
+    data: Any,  # noqa: ANN401
+    path: str,
+    force_suffix: str | None = None,
+    *,
+    verbose: bool = True,
+) -> bool:
     pl_path = Path(path)
     dump_lambdas = {
         "json": dumpjson,
@@ -133,7 +139,13 @@ def dump_file(data: Any, path: str, force_suffix: str | None = None, *, verbose:
     return False
 
 
-def load_file(path: str, force_suffix: str | None = None, mmm: str | None = None, *, verbose: bool = True) -> Any:
+def load_file(
+    path: str,
+    force_suffix: str | None = None,
+    mmm: str | None = None,
+    *,
+    verbose: bool = True,
+) -> Any:  # noqa: ANN401
     pl_path = Path(path)
     if not pl_path.exists():
         logging.warning(f">> Path missing: {path}")
@@ -153,7 +165,7 @@ def load_file(path: str, force_suffix: str | None = None, mmm: str | None = None
             data = load_fxn(pl_path)
             if verbose:
                 logging.info(f">> Loaded file: {path}")
-        except Exception:
+        except (OSError, ValueError, KeyError, TypeError):
             data = None
         return data
 
@@ -165,11 +177,11 @@ def loadjsonl(pl_path: Path) -> list[Any]:
     return list(jsonlines.open(pl_path).iter(skip_empty=True))
 
 
-def loadpkl(pl_path: Path) -> Any:
+def loadpkl(pl_path: Path) -> Any:  # noqa: ANN401
     return pickle.load(pl_path.open(mode="rb"))
 
 
-def loadomega(pl_path: Path) -> Any:
+def loadomega(pl_path: Path) -> Any:  # noqa: ANN401
     return OmegaConf.load(pl_path)
 
 
@@ -188,26 +200,26 @@ def dumpjsonl(data: list[Any], pl_path: Path, *, verbose: bool = True) -> None:
         logging.info(f">> Dumped jsonl: {pl_path}")
 
 
-def dumpjson(data: Any, pl_path: Path, *, verbose: bool = True) -> None:
+def dumpjson(data: Any, pl_path: Path, *, verbose: bool = True) -> None:  # noqa: ANN401
     json.dump(data, pl_path.open(mode="w+"))
     if verbose:
         logging.info(f">> Dumped json: {pl_path}")
 
 
-def dumppkl(data: Any, pl_path: Path, *, verbose: bool = True) -> None:
+def dumppkl(data: Any, pl_path: Path, *, verbose: bool = True) -> None:  # noqa: ANN401
     with pl_path.open(mode="wb") as handle:
         pickle.dump(data, handle, protocol=pickle.HIGHEST_PROTOCOL)
     if verbose:
         logging.info(f">> Dumped pkl: {pl_path}")
 
 
-def dumpnpy(data: Any, pl_path: Path, *, verbose: bool = True) -> None:
+def dumpnpy(data: Any, pl_path: Path, *, verbose: bool = True) -> None:  # noqa: ANN401
     np.save(pl_path, data)
     if verbose:
         logging.info(f">> Dumped npy: {pl_path}")
 
 
-def dumpomega(data: Any, pl_path: Path, *, verbose: bool = True) -> None:
+def dumpomega(data: Any, pl_path: Path, *, verbose: bool = True) -> None:  # noqa: ANN401
     OmegaConf.save(data, f=pl_path)
     if verbose:
         logging.info(f">> Dumped OmegaConf: {pl_path}")
