@@ -6,8 +6,8 @@
 import argparse
 import gzip
 import json
-import os
 import shutil
+from pathlib import Path
 from typing import Any
 
 import bibtexparser
@@ -90,12 +90,12 @@ def _handle_gzipped_file(input_path: str) -> str:
     print(f"Input file '{input_path}' is gzipped. Decompressing temporarily...")
     temp_path = input_path.replace(".gz", "") + "_temp.bib"
 
-    if os.path.exists(temp_path):
-        os.remove(temp_path)
+    temp_path_obj = Path(temp_path)
+    if temp_path_obj.exists():
+        temp_path_obj.unlink()
 
-    with gzip.open(input_path, "rb") as f_in:
-        with open(temp_path, "wb") as f_out:
-            shutil.copyfileobj(f_in, f_out)
+    with gzip.open(input_path, "rb") as f_in, Path(temp_path).open("wb") as f_out:
+        shutil.copyfileobj(f_in, f_out)
 
     print(f"Decompressed to: {temp_path}")
     return temp_path
@@ -215,10 +215,10 @@ def _write_entries_to_jsonl(
     count = 0
     current_file_mode = "w" if overwrite_flag else "a"
 
-    if not os.path.exists(output_path):
+    if not Path(output_path).exists():
         current_file_mode = "w"
 
-    with open(output_path, current_file_mode, encoding="utf-8") as outfile:
+    with Path(output_path).open(current_file_mode, encoding="utf-8") as outfile:
         for entry_idx, entry in enumerate(entries):
             try:
                 # Ensure keys are lowercase for extract_info_from_bib_entry
@@ -276,7 +276,7 @@ def process_bibtex_file(
         print(f"Parsing BibTeX file: {actual_bib_path} (Mode: {parser_mode})")
 
         # Read file content
-        with open(actual_bib_path, encoding="utf-8") as bibtex_file:
+        with Path(actual_bib_path).open(encoding="utf-8") as bibtex_file:
             bib_content_str = bibtex_file.read()
 
         # Parse based on mode
@@ -315,9 +315,9 @@ def process_bibtex_file(
         print(f"An unexpected error occurred: {e}")
         return 0
     finally:
-        if temp_decompressed_path and os.path.exists(temp_decompressed_path):
+        if temp_decompressed_path and Path(temp_decompressed_path).exists():
             print(f"Cleaning up temporary file: {temp_decompressed_path}")
-            os.remove(temp_decompressed_path)
+            Path(temp_decompressed_path).unlink()
 
 
 if __name__ == "__main__":
@@ -343,9 +343,9 @@ if __name__ == "__main__":
     # is_gzipped_input = input_file.endswith('.gz')
     is_gzipped_input = False
 
-    if not args.overwrite and os.path.exists(output_file):
+    if not args.overwrite and Path(output_file).exists():
         print(f"Output file '{output_file}' already exists. Appending. Use --overwrite to overwrite.")
-    elif args.overwrite and os.path.exists(output_file):
+    elif args.overwrite and Path(output_file).exists():
         print(f"Output file '{output_file}' will be overwritten.")
     else:
         print(f"Creating new output file '{output_file}'.")
