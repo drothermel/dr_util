@@ -2,7 +2,7 @@ import logging
 from collections.abc import Callable
 from enum import Enum
 from functools import singledispatchmethod
-from typing import Any, Union
+from typing import Any, Union, cast
 
 import jsonlines
 from omegaconf import DictConfig, OmegaConf
@@ -148,7 +148,7 @@ def agg_batch_weighted_list_avg(data: dict[str, Any], key: str) -> float:
         [data[key][i] * data[BATCH_KEY][i] for i in range(len(data[key]))]
     )
     total_samples = sum(data[BATCH_KEY])
-    return weighted_sum * 1.0 / total_samples
+    return float(weighted_sum * 1.0 / total_samples)
 
 
 class MetricsSubgroup:
@@ -207,7 +207,7 @@ class MetricsSubgroup:
         assert False, f">> Unexpected data type: {type(data)}"
 
     @add.register(tuple)
-    def _(self, data: tuple, ns: int = 1) -> None:
+    def _(self, data: tuple[str, Any], ns: int = 1) -> None:
         assert len(data) == len(("key", "val"))
         self._add_tuple(*data)
         self._add_tuple(BATCH_KEY, ns)
@@ -257,7 +257,7 @@ class Metrics:
         for logger in self.loggers:
             logger.log(value)
 
-    def train(self, data: tuple | dict[str, Any], ns: int = 1) -> None:
+    def train(self, data: tuple[str, Any] | dict[str, Any], ns: int = 1) -> None:
         """Add training data to metrics.
 
         Args:
@@ -266,7 +266,7 @@ class Metrics:
         """
         self.groups["train"].add(data, ns=ns)
 
-    def val(self, data: tuple | dict[str, Any], ns: int = 1) -> None:
+    def val(self, data: tuple[str, Any] | dict[str, Any], ns: int = 1) -> None:
         """Add validation data to metrics.
 
         Args:
@@ -301,6 +301,6 @@ class Metrics:
         agg_data = self.agg(data_name)
         for key in self.cfg.metrics.init:
             if key in agg_data:
-                log_dict["agg_stats"][key] = agg_data[key]
+                cast(dict[str, Any], log_dict["agg_stats"])[key] = agg_data[key]
 
         self.log(log_dict)

@@ -1,6 +1,6 @@
 import logging
 from functools import singledispatch
-from typing import Any
+from typing import Any, cast
 
 from omegaconf import DictConfig, OmegaConf
 
@@ -63,5 +63,6 @@ def validate_cfg(cfg: DictConfig, config_type: str, schema_fxn: Any) -> bool:
 
 def get_bad_keys_by_schema(cfg: DictConfig, schema_cls: type) -> list[str]:
     input_dict = OmegaConf.to_container(cfg, resolve=True)
-    input_data_class = schema_cls(**input_dict, class_name="Top Level Config")
-    return input_data_class.missing_or_invalid_keys
+    assert isinstance(input_dict, dict), "Expected dict from OmegaConf.to_container"
+    input_data_class = schema_cls(**cast(dict[str, Any], input_dict), class_name="Top Level Config")
+    return list(input_data_class.missing_or_invalid_keys)

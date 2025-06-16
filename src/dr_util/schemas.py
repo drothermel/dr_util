@@ -36,7 +36,7 @@ class MetricsInitConfig:
 class MetricsConfig:
     """Configuration for metrics collection and logging."""
 
-    loggers: list[str] = MISSING
+    loggers: list[str] = MISSING  # type: ignore[assignment]
     init: type = MetricsInitConfig
 
 

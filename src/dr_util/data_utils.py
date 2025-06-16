@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, cast
 
 import torch
 from torch.utils.data import DataLoader, Dataset
@@ -47,10 +47,10 @@ def get_cifar_dataset(
         )
     else:
         assert False, f"Unknown CIFAR dataset_name: {dataset_name}"
-    return ds
+    return cast(Dataset[Any], ds)
 
 
-class TransformedSubset(torch.utils.data.Dataset):
+class TransformedSubset(torch.utils.data.Dataset[Any]):
     """A wrapper for a torch.utils.data.Subset that applies a transform.
 
     This is useful because Subsets themselves don't have a transform attribute
@@ -71,7 +71,7 @@ class TransformedSubset(torch.utils.data.Dataset):
 
     def __len__(self) -> int:
         """Return the length of the subset."""
-        return len(self.subset)
+        return len(cast(Any, self.subset))
 
 
 def get_tensor_transform() -> transforms.Compose:
@@ -83,7 +83,7 @@ def get_tensor_transform() -> transforms.Compose:
 
 
 def apply_tensor_transform(data: Any) -> torch.Tensor:
-    return transforms.functional.to_tensor(data)
+    return cast(torch.Tensor, transforms.functional.to_tensor(data))
 
 
 def get_dataloader(
@@ -110,7 +110,7 @@ def split_data(dataset: Dataset[Any], ratio: float, data_split_seed: int | None 
     if data_split_seed is not None:
         split_generator.manual_seed(data_split_seed)
 
-    num_samples = len(dataset)
+    num_samples = len(cast(Any, dataset))
     num_first = int(ratio * num_samples)
     num_second = num_samples - num_first
     first_subset, second_subset = torch.utils.data.random_split(

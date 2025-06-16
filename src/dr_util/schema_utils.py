@@ -1,7 +1,7 @@
 from dataclasses import MISSING, fields
-from typing import Any, TypeVar
+from typing import Any, TypeVar, cast
 
-T = TypeVar("T")
+T = TypeVar("T", bound=object)
 
 
 def lenient_validate(cls: type[T]) -> type[T]:
@@ -16,9 +16,9 @@ def lenient_validate(cls: type[T]) -> type[T]:
     original_init = cls.__init__
 
     # Collect the field names defined in the dataclass.
-    valid_field_names = {f.name for f in fields(cls)}
+    valid_field_names = {f.name for f in fields(cast(Any, cls))}
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:  # noqa: N807, ANN401
+    def __init__(self: Any, *args: Any, **kwargs: Any) -> None:  # noqa: N807, ANN401
         self.missing_or_invalid_keys = set()
 
         # Drop extra keys and add missing keys
@@ -68,5 +68,5 @@ def lenient_validate(cls: type[T]) -> type[T]:
                 if curr_val != default:
                     self.missing_or_invalid_keys.add(name)
 
-    cls.__init__ = __init__
+    cls.__init__ = __init__  # type: ignore[method-assign]
     return cls

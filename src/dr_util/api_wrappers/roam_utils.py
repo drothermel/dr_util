@@ -56,7 +56,7 @@ class RoamBackendClient:
 
     def call(self, path: str, method: str, body: dict[str, Any]) -> requests.Response:
         """Call the Roam API with given path, method, and body."""
-        url, method, headers = self.__make_request(path, body, method)
+        url, method, headers = self.__make_request(path, method)
         resp = requests.post(
             url, headers=headers, json=body, allow_redirects=False, timeout=30
         )
