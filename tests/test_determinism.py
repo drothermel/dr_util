@@ -1,8 +1,8 @@
+
 import numpy as np
 import torch
 from PIL import Image
 from torchvision import transforms
-from typing import Tuple
 
 import dr_util.data_utils as du
 import dr_util.determinism_utils as dtu
@@ -10,10 +10,15 @@ import dr_util.determinism_utils as dtu
 
 class DummyDataset(torch.utils.data.Dataset):
     """Dummy dataset for testing purposes."""
-    
-    def __init__(self, num_samples: int = 20, image_size: Tuple[int, int] = (32, 32), num_classes: int = 10) -> None:
+
+    def __init__(
+        self,
+        num_samples: int = 20,
+        image_size: tuple[int, int] = (32, 32),
+        num_classes: int = 10,
+    ) -> None:
         """Initialize dummy dataset.
-        
+
         Args:
             num_samples: Number of samples to generate.
             image_size: Size of images (height, width).
@@ -37,7 +42,7 @@ class DummyDataset(torch.utils.data.Dataset):
         """Return the number of samples."""
         return self.num_samples
 
-    def __getitem__(self, index: int) -> Tuple[Image.Image, int]:
+    def __getitem__(self, index: int) -> tuple[Image.Image, int]:
         """Get a sample by index."""
         return self.data[index], self.targets[index]
 

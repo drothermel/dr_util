@@ -5,7 +5,7 @@ import pickle
 import sys
 from collections.abc import Generator
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import jsonlines
 import numpy as np
@@ -112,7 +112,7 @@ def load_files(path_list: list[str]) -> list[Any]:
     return all_file_data
 
 
-def dump_file(data: Any, path: str, force_suffix: Optional[str] = None, *, verbose: bool = True) -> bool:
+def dump_file(data: Any, path: str, force_suffix: str | None = None, *, verbose: bool = True) -> bool:
     pl_path = Path(path)
     dump_lambdas = {
         "json": dumpjson,
@@ -133,7 +133,7 @@ def dump_file(data: Any, path: str, force_suffix: Optional[str] = None, *, verbo
     return False
 
 
-def load_file(path: str, force_suffix: Optional[str] = None, mmm: Optional[str] = None, *, verbose: bool = True) -> Any:
+def load_file(path: str, force_suffix: str | None = None, mmm: str | None = None, *, verbose: bool = True) -> Any:
     pl_path = Path(path)
     if not pl_path.exists():
         logging.warning(f">> Path missing: {path}")
