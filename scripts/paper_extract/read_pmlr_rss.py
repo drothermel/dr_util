@@ -19,6 +19,7 @@ import requests
 # --- Configuration ---
 REQUEST_TIMEOUT = 15  # second
 DELAY_BETWEEN_VOLUMES = 2  # seconds, to be polite to the server
+HTTP_NOT_FOUND = 404  # HTTP status code for not found
 FIELDS_TO_DROP = [
     "title_detail", "summary_detail", "published_parsed", "updated_parsed"
 ]  # Added updated_parsed as it's similar
@@ -34,92 +35,178 @@ def json_converter(o):
             return time.strftime("%Y-%m-%dT%H:%M:%SZ", o)
         except TypeError:
             return str(o)
-    raise TypeError(
-        f"Object of type {o.__class__.__name__} is not JSON serializable "
-        f"and not handled by json_converter"
-    )
+    msg = f"Object of type {o.__class__.__name__} is not JSON serializable"
+    raise TypeError(msg)
 
-# --- Core Processing Function ---
-def process_volume_to_jsonl(volume_number, output_file_handle):
-    """Fetches, parses, extracts conference metadata, and writes entries.
+# --- Helper Functions for Conference Metadata Extraction ---
 
-    From a single volume's RSS feed to the output file.
+def fetch_rss_feed(volume_number):
+    """Fetch RSS feed for a given volume number.
 
     Args:
         volume_number (int): The PMLR volume number.
-        output_file_handle: An open file handle for writing JSON lines.
 
     Returns:
-        int: Number of entries processed for this volume.
+        feedparser.FeedParserDict or None: Parsed feed or None if failed.
     """
     feed_url = f"https://proceedings.mlr.press/v{volume_number}/assets/rss/feed.xml"
     print(f"\nProcessing Volume {volume_number} from: {feed_url}")
 
     try:
         headers = {
-            "User-Agent": f"PMLRMultiVolumeExtractor/1.1 (Volume {volume_number})" # Updated version
+            "User-Agent": (
+                f"PMLRMultiVolumeExtractor/1.1 (Volume {volume_number})"
+            )
         }
         response = requests.get(feed_url, headers=headers, timeout=REQUEST_TIMEOUT)
 
-        if response.status_code == 404:
-            print(f"  WARNING: Volume {volume_number} RSS feed not found (404 Error). Skipping.")
-            return 0
+        if response.status_code == HTTP_NOT_FOUND:
+            print(
+                f"  WARNING: Volume {volume_number} RSS feed not found "
+                f"({HTTP_NOT_FOUND} Error). Skipping."
+            )
+            return None
 
         response.raise_for_status()
+        return feedparser.parse(response.content)
 
     except requests.exceptions.RequestException as e:
         print(f"  Error fetching RSS feed for Volume {volume_number}: {e}")
-        return 0
+        return None
 
-    feed = feedparser.parse(response.content)
 
-    # Extract conference metadata from the feed itself
+def extract_year_from_published(feed_meta):
+    """Extract year from feed's published_parsed field.
+
+    Args:
+        feed_meta: Feed metadata object.
+
+    Returns:
+        str: Year as string or "N/A" if not found.
+    """
+    if not feed_meta.get("published_parsed"):
+        return "N/A"
+
+    import contextlib
+    with contextlib.suppress(AttributeError):
+        return str(feed_meta.published_parsed.tm_year)
+    return "N/A"
+
+
+def extract_from_managing_editor(managing_editor_str):
+    """Extract conference short name and year from managingEditor field.
+
+    Args:
+        managing_editor_str (str): Managing editor string.
+
+    Returns:
+        tuple: (conference_short_name, conference_year) or ("N/A", "N/A").
+    """
+    if not managing_editor_str:
+        return "N/A", "N/A"
+
+    # Regex to find patterns like "(CoLLAs 2023)" or "(AISTATS 2023)"
+    pattern = r"\(([^)]+?)\s+(19\d{2}|20\d{2})\)$"
+    match = re.search(pattern, managing_editor_str.strip())
+
+    if match:
+        return match.group(1).strip(), match.group(2).strip()
+    return "N/A", "N/A"
+
+
+def extract_year_fallbacks(feed_meta, conference_title_from_feed, current_year):
+    """Extract year using fallback methods.
+
+    Args:
+        feed_meta: Feed metadata object.
+        conference_title_from_feed (str): Conference title from feed.
+        current_year (str): Current year value.
+
+    Returns:
+        str: Year as string or current_year if not found.
+    """
+    if current_year != "N/A":
+        return current_year
+
+    # Try from description
+    description_text = feed_meta.get("description", "")
+    if description_text:
+        year_match = re.search(r"\b(19\d{2}|20\d{2})\b", description_text)
+        if year_match:
+            return year_match.group(1)
+
+    # Try from feed title as last resort
+    if conference_title_from_feed != "N/A":
+        year_match = re.search(r"\b(19\d{2}|20\d{2})\b", conference_title_from_feed)
+        if year_match:
+            return year_match.group(1)
+
+    return current_year
+
+
+def extract_conference_metadata(feed):
+    """Extract conference metadata from RSS feed.
+
+    Args:
+        feed: Parsed RSS feed object.
+
+    Returns:
+        tuple: (conference_short_name, conference_year, conference_title_from_feed).
+    """
     conference_short_name = "N/A"
     conference_year = "N/A"
     conference_title_from_feed = "N/A"
 
-    if hasattr(feed, "feed"):
-        feed_meta = feed.feed
-        conference_title_from_feed = feed_meta.get("title", "N/A")
-        conf_desc = feed_meta.get("description", "N/A")
+    if not hasattr(feed, "feed"):
+        return conference_short_name, conference_year, conference_title_from_feed
 
-        # 1. Attempt to get year from published_parsed (of the feed itself)
-        if feed_meta.get("published_parsed"):
-            try:
-                conference_year = str(feed_meta.published_parsed.tm_year)
-            except AttributeError:
-                pass # Handled by later fallbacks
+    feed_meta = feed.feed
+    conference_title_from_feed = feed_meta.get("title", "N/A")
+    conf_desc = feed_meta.get("description", "N/A")
 
-        # 2. Attempt to get short name and potentially year from managingEditor
-        managing_editor_str = feed_meta.get("managingEditor", "")
-        if managing_editor_str:
-            # Regex to find patterns like "(CoLLAs 2023)" or "(AISTATS 2023)"
-            match = re.search(r"\(([^)]+?)\s+(19\d{2}|20\d{2})\)$", managing_editor_str.strip())
-            if match:
-                conference_short_name = match.group(1).strip()
-                # Prefer year from managingEditor if available and matches a year format
-                conference_year = match.group(2).strip()
+    # 1. Try to get year from published_parsed
+    conference_year = extract_year_from_published(feed_meta)
 
-        # 3. Fallbacks for year if still "N/A" (after trying managingEditor and feed's published_parsed)
-        if conference_year == "N/A": # Check if year is still not found
-            description_text = feed_meta.get("description", "")
-            if description_text:
-                year_match_desc = re.search(r"\b(19\d{2}|20\d{2})\b", description_text)
-                if year_match_desc:
-                    conference_year = year_match_desc.group(1)
+    # 2. Try to get short name and year from managingEditor
+    managing_editor_str = feed_meta.get("managingEditor", "")
+    editor_short_name, editor_year = extract_from_managing_editor(managing_editor_str)
 
-        if conference_year == "N/A" and conference_title_from_feed != "N/A":
-            # Try from feed title as last resort for year
-            year_match_title = re.search(r"\b(19\d{2}|20\d{2})\b", conference_title_from_feed)
-            if year_match_title:
-                conference_year = year_match_title.group(1)
+    if editor_short_name != "N/A":
+        conference_short_name = editor_short_name
+    if editor_year != "N/A":
+        conference_year = editor_year
 
-        # 4. Fallback for conference_short_name: if still "N/A", use the full feed title
-        if conference_short_name == "N/A" and conference_title_from_feed != "N/A":
-            conference_short_name = re.sub(r"^Proceedings of\s*", "",conf_desc.split("\n")[0])
+    # 3. Fallbacks for year
+    conference_year = extract_year_fallbacks(
+        feed_meta, conference_title_from_feed, conference_year
+    )
+
+    # 4. Fallback for conference_short_name
+    if conference_short_name == "N/A" and conference_title_from_feed != "N/A":
+        conference_short_name = re.sub(
+            r"^Proceedings of\s*", "", conf_desc.split("\n")[0]
+        )
+
+    return conference_short_name, conference_year, conference_title_from_feed
 
 
-    print(f"  Extracted Conference Info: Name='{conference_short_name}', Year='{conference_year}', FeedTitle='{conference_title_from_feed[:60]}...'")
+def process_entries_to_jsonl(
+    feed, conference_metadata, output_file_handle, volume_number
+):
+    """Process feed entries and write to JSONL format.
+
+    Args:
+        feed: Parsed RSS feed object.
+        conference_metadata (tuple): Conference metadata tuple.
+        output_file_handle: File handle for writing.
+        volume_number (int): Volume number for error reporting.
+
+    Returns:
+        int: Number of entries processed.
+    """
+    conference_short_name, conference_year, conference_title_from_feed = (
+        conference_metadata
+    )
 
     if not feed.entries:
         print(f"  No entries found in the feed for Volume {volume_number}.")
@@ -134,7 +221,6 @@ def process_volume_to_jsonl(volume_number, output_file_handle):
             # Add extracted conference metadata to each paper entry
             entry_data["conference_short_name"] = conference_short_name
             entry_data["conference_year"] = conference_year
-            # Optionally, add the full title from the feed's metadata for context
             entry_data["conference_title_from_feed"] = conference_title_from_feed
 
             # Drop specified fields before writing
@@ -147,7 +233,41 @@ def process_volume_to_jsonl(volume_number, output_file_handle):
             entries_processed_count += 1
         except Exception as e:
             print(f"    Error serializing entry {i+1} for Volume {volume_number}: {e}")
-            # print(f"      Problematic entry keys: {list(entry.keys())}") # For debugging
+
+    return entries_processed_count
+
+
+# --- Core Processing Function ---
+def process_volume_to_jsonl(volume_number, output_file_handle):
+    """Fetches, parses, extracts conference metadata, and writes entries.
+
+    From a single volume's RSS feed to the output file.
+
+    Args:
+        volume_number (int): The PMLR volume number.
+        output_file_handle: An open file handle for writing JSON lines.
+
+    Returns:
+        int: Number of entries processed for this volume.
+    """
+    # Fetch RSS feed
+    feed = fetch_rss_feed(volume_number)
+    if feed is None:
+        return 0
+
+    # Extract conference metadata
+    conference_metadata = extract_conference_metadata(feed)
+    conference_short_name, conference_year, conference_title_from_feed = conference_metadata
+
+    print(
+        f"  Extracted Conference Info: Name='{conference_short_name}', "
+        f"Year='{conference_year}', FeedTitle='{conference_title_from_feed[:60]}...'"
+    )
+
+    # Process entries and write to JSONL
+    entries_processed_count = process_entries_to_jsonl(
+        feed, conference_metadata, output_file_handle, volume_number
+    )
 
     print(f"  Successfully processed {entries_processed_count} entries for Volume {volume_number}.")
     return entries_processed_count
