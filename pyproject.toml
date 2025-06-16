@@ -28,11 +28,31 @@ build-backend = "hatchling.build"
 dev = [
     "pytest>=8.3.4",
     "ruff>=0.9.6",
+    "mypy>=1.16.0",
+    "tomlkit>=0.12.0",
+]
+test = [
+    "pytest>=8.4.0",
+    "pytest-cov>=4.0",      # Coverage reports
+    "pytest-xdist>=3.0",    # Parallel execution
+    "pytest-timeout>=2.0",  # Timeout long-running tests
+    "pytest-mock>=3.0",     # Better mocking
+    "pytest-benchmark>=4.0", # Performance benchmarking
+]
+test-ml = [
+    "pytest-pytorch>=0.2",   # PyTorch test utilities
+    "pytest-randomly>=3.0",  # Randomize test order
+]
+all = [
+    {include-group = "dev"},
+    {include-group = "test"},
+    {include-group = "test-ml"},
 ]
 
 [tool.ruff]
 line-length = 88
 exclude = ["outputs/*", "notebooks/*"]
+include = ["src/**/*.py", "scripts/**/*.py", "tests/**/*.py"]
 
 [tool.ruff.format]
 indent-style = "space"
@@ -84,6 +104,23 @@ extend-select = [
     #"D",    # pydocstyle
     #"TCH",  # flake8-type-checking
     #"ANN",  # flake8-annotations 
+    "ANN",
+    "BLE",
+    "C90",
+    "D",
+    "DTZ",
+    "DOC",
+    "FA",
+    "PLW",
+    "PLE",
+    "PLR0133",
+    "PLR1714",
+    "PLR2004",
+    "RSE",
+    "S",
+    "TCH",
+    "W",
+    "YTT"
 ]
 ignore = [
     "COM812", # ignoring both based on conflict
@@ -96,8 +133,137 @@ ignore = [
     "B011", # do not assert false, exceptions slow down training code
     "PLR0913", # too many arguments in function def ???
     "NPY002", # don't use np.random.seed, I don't trust myself to remember
+    "S101",
+    "ANN001",
+    "ANN101",
+    "ANN102",
+    "ANN201",
+    "D100",
+    "D103",
+    "D104",
 ]
 
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"  # Accepts: "google", "numpy", or "pep257".
+ignore-decorators = ["typing.overload", "typing.override"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = [
+    "ARG",      # unused arguments in fixtures
+    "PLR2004",  # Magic values are OK in tests
+]
+"src/models/**/*.py" = [
+    "PLR0913",  # Many arguments OK for model configs
+]
+"scripts/**/*.py" = [
+    "T201",     # print() is fine in scripts
+]
+
+[tool.ruff.lint.extend-ignore]
+"*_notebook.py" = ["E402", "F401"]  # Import order/unused imports OK
+
+[tool.ruff.lint.mccabe]
+max-complexity = 15  # Higher threshold for ML
+
+[tool.ruff.lint.pylint]
+max-args = 10           # More lenient for ML functions
+max-statements = 100    # Allow longer functions for training loops
+
+
+[tool.mypy]
+files = ["src/", "tests/"]
+mypy_path = "src"
+strict = true
+check_untyped_defs = true
+disallow_any_generics = true
+disallow_subclassing_any = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_unreachable = true
+no_implicit_reexport = true
+strict_equality = true
+explicit_package_bases = true
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+# Ignore missing imports for libraries without type stubs
+ignore_missing_imports = true
+
+# Performance
+cache_dir = ".mypy_cache"
+show_error_codes = true
+
+
+[tool.pytest.ini_options]
+# Test discovery
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
+# Logging (disabled by default for clean test output)
+# Enable with: pytest --log-cli-level=INFO
+log_cli = false
+log_cli_level = "INFO"
+log_cli_format = "%(asctime)s [%(levelname)8s] %(name)s: %(message)s"
+log_cli_date_format = "%Y-%m-%d %H:%M:%S"
+
+# Warnings
+filterwarnings = [
+    "ignore::UserWarning",
+    "ignore::DeprecationWarning"
+]
+
+addopts = [
+    "--strict-config",
+    "--strict-markers",
+    "--verbose",
+    "-ra",  # show all test outcome reasons
+    "-n", "auto",
+]
+
+# Fail on unregistered markers
+markers = [
+    "slow: marks tests as slow",
+    "serial: marks tests that must run serially",
+    "integration: marks integration tests",
+]
+
+# Coverage integration
+plugins = ["pytest-cov"]
+
+
+[tool.coverage.report]
+exclude_lines = [
+    # Standard exclusions
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+    "@profile",  # Line profiler decorators
+    "if _debug:",  # Debug-only code
+    "if _profile:",  # Profiling-only code
+
+    # ML-specific exclusions
+    "if torch.cuda.is_available()",  # GPU-specific code
+    "@torch.no_grad()",  # Inference-only code
+    "if __name__ == .__main__.:",  # Script entry points
+    "def visualize",  # Visualization/debugging functions
+    "except KeyboardInterrupt:",  # User interruption handlers
+    "@torch.jit.script",  # JIT compiled code
+    "@torch.jit.export",
+]
+
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "tests/*",
+    "scripts/*",  # Standalone scripts
+    "notebooks/*",  # Jupyter notebooks
+    "*/__init__.py",  # Empty init files
+    "*/config.py",  # Configuration files
+]
