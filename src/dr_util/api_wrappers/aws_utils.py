@@ -11,7 +11,7 @@ from botocore.handlers import disable_signing
 
 
 class S3Manager:
-    def __init__(self, boto3_session: boto3.Session | None = None):
+    def __init__(self, boto3_session: boto3.Session | None = None) -> None:
         """:param boto3_session: boto3 session (`boto3.Session`) optional,
         if not set will use default session
         High-level abstractions for working with S3.

@@ -16,7 +16,7 @@ RETRY_ERROR = 503
 # Basically ruff wants me to make my own exceptions, do this one day
 # ruff: noqa: TRY002, TRY003
 class RoamBackendClient:
-    def __init__(self, token, graph):
+    def __init__(self, token, graph) -> None:
         self.__token = token
         self.graph = graph
         self.__cache = {}

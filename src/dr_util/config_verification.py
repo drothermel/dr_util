@@ -15,13 +15,13 @@ def cfg_to_loggable_lines(cfg):
 
 
 @cfg_to_loggable_lines.register(dict)
-def _(cfg):
+def _(cfg) -> list[str]:
     cfg_str = str(cfg)
     return cfg_str.strip("\n").split("\n")
 
 
 @cfg_to_loggable_lines.register(DictConfig)
-def _(cfg):
+def _(cfg) -> list[str]:
     resolved_cfg = OmegaConf.to_container(cfg, resolve=True)
     cfg_str = OmegaConf.to_yaml(resolved_cfg)
     return cfg_str.strip("\n").split("\n")

@@ -54,17 +54,17 @@ class TransformedSubset(torch.utils.data.Dataset):
     that can be set after creation.
     """
 
-    def __init__(self, subset, transform=None):
+    def __init__(self, subset, transform=None) -> None:
         self.subset = subset
         self.transform = transform
 
-    def __getitem__(self, index):
+    def __getitem__(self, index) -> tuple:
         x, y = self.subset[index]  # Subset returns data from the original dataset
         if self.transform:
             x = self.transform(x)
         return x, y
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.subset)
 
 
