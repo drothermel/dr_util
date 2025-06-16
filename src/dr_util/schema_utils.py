@@ -5,8 +5,7 @@ T = TypeVar("T")
 
 
 def lenient_validate(cls: type[T]) -> type[T]:
-    """A decorator that wraps a dataclass __init__ so that extra keyword
-    arguments are ignored.
+    """A decorator that wraps a dataclass __init__ so that extra keyword arguments are ignored.
 
     Args:
         cls: The dataclass to wrap.

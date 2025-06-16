@@ -52,6 +52,7 @@ OPENREVIEW_API_ENDPOINTS = {
 
 def extract_paper_data(note):
     """Extracts relevant information from a single 'note' object.
+
     Adjust this function based on the actual structure of the API response.
     """
     content = note.get("content", {})
@@ -86,8 +87,7 @@ def extract_paper_data(note):
     }
 
 def fetch_and_save_data(api_base_url, output_file_handle, limit_per_request):
-    """Fetches all data from the paginated API and saves it.
-    """
+    """Fetches all data from the paginated API and saves it."""
     current_offset = 0
     total_processed_count = 0
     total_expected_count = None # Will be set by the first API call

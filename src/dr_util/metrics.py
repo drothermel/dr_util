@@ -87,6 +87,7 @@ class JsonLogger:
 
     @singledispatchmethod
     def log(self, value):
+        """Log a value using singledispatch based on type."""
         if self.writer is not None:
             self.writer.write({"type": type(value).__name__, "value": value})
 
