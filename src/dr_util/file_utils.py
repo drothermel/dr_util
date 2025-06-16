@@ -5,7 +5,7 @@ import pickle
 import sys
 from collections.abc import Generator
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import jsonlines
 import numpy as np
@@ -142,7 +142,7 @@ def dump_file(
 def load_file(
     path: str,
     force_suffix: str | None = None,
-    mmm: str | None = None,
+    mmm: Literal["r+", "r", "w+", "c"] | None = None,
     *,
     verbose: bool = True,
 ) -> Any:  # noqa: ANN401

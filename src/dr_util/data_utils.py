@@ -1,5 +1,7 @@
+from typing import Any, cast
+
 import torch
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Dataset
 from torchvision import datasets, transforms
 
 import dr_util.determinism_utils as dtu
@@ -9,12 +11,13 @@ DEFAULT_TRANSFORM = None
 
 
 def get_cifar_dataset(
-    dataset_name,
-    source_split,  # the official split (train or test)
-    root,
-    transform=DEFAULT_TRANSFORM,
-    download=DEFAULT_DOWNLOAD,
-):
+    dataset_name: str,
+    source_split: str,  # the official split (train or test)
+    root: str,
+    transform: Any | None = DEFAULT_TRANSFORM,  # noqa: ANN401
+    *,
+    download: bool = DEFAULT_DOWNLOAD,
+) -> Dataset[Any]:
     """Loads a specified dataset (CIFAR-10 or CIFAR-100).
 
     Args:
@@ -45,22 +48,22 @@ def get_cifar_dataset(
         )
     else:
         assert False, f"Unknown CIFAR dataset_name: {dataset_name}"
-    return ds
+    return cast(Dataset[Any], ds)
 
 
-class TransformedSubset(torch.utils.data.Dataset):
+class TransformedSubset(torch.utils.data.Dataset[Any]):
     """A wrapper for a torch.utils.data.Subset that applies a transform.
 
     This is useful because Subsets themselves don't have a transform attribute
     that can be set after creation.
     """
 
-    def __init__(self, subset, transform=None) -> None:
+    def __init__(self, subset: Dataset[Any], transform: Any | None = None) -> None:  # noqa: ANN401
         """Initialize with a subset and optional transform."""
         self.subset = subset
         self.transform = transform
 
-    def __getitem__(self, index) -> tuple:
+    def __getitem__(self, index: int) -> tuple[Any, Any]:
         """Get item at index with optional transform applied."""
         x, y = self.subset[index]  # Subset returns data from the original dataset
         if self.transform:
@@ -69,10 +72,10 @@ class TransformedSubset(torch.utils.data.Dataset):
 
     def __len__(self) -> int:
         """Return the length of the subset."""
-        return len(self.subset)
+        return len(cast(Any, self.subset))
 
 
-def get_tensor_transform():
+def get_tensor_transform() -> transforms.Compose:
     return transforms.Compose(
         [
             transforms.ToTensor(),
@@ -80,18 +83,19 @@ def get_tensor_transform():
     )
 
 
-def apply_tensor_transform(data):
-    return transforms.functional.to_tensor(data)
+def apply_tensor_transform(data: Any) -> torch.Tensor:  # noqa: ANN401
+    return cast(torch.Tensor, transforms.functional.to_tensor(data))
 
 
 def get_dataloader(
-    dataset,
-    transform,
-    batch_size,
-    shuffle,
-    generator,
-    num_workers,
-):
+    dataset: Dataset[Any],
+    transform: Any | None,  # noqa: ANN401
+    batch_size: int,
+    *,
+    shuffle: bool,
+    generator: torch.Generator,
+    num_workers: int,
+) -> DataLoader[Any]:
     dataset_transformed = TransformedSubset(dataset, transform=transform)
     return DataLoader(
         dataset_transformed,
@@ -103,12 +107,14 @@ def get_dataloader(
     )
 
 
-def split_data(dataset, ratio, data_split_seed=None):
+def split_data(
+    dataset: Dataset[Any], ratio: float, data_split_seed: int | None = None
+) -> tuple[Dataset[Any], Dataset[Any]]:
     split_generator = torch.Generator()
     if data_split_seed is not None:
         split_generator.manual_seed(data_split_seed)
 
-    num_samples = len(dataset)
+    num_samples = len(cast(Any, dataset))
     num_first = int(ratio * num_samples)
     num_second = num_samples - num_first
     first_subset, second_subset = torch.utils.data.random_split(

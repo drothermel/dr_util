@@ -4,7 +4,7 @@ import numpy as np
 import torch
 
 
-def seed_worker(worker_id):  # noqa: ARG001
+def seed_worker(worker_id: int) -> None:  # noqa: ARG001
     """Seeds a DataLoader worker.
 
     This function is intended to be used as the worker_init_fn in a DataLoader.
@@ -16,7 +16,7 @@ def seed_worker(worker_id):  # noqa: ARG001
     random.seed(worker_seed)
 
 
-def set_deterministic(seed):
+def set_deterministic(seed: int) -> torch.Generator:
     """Sets seeds for deterministic behavior in PyTorch, NumPy, and random.
 
     Args:
