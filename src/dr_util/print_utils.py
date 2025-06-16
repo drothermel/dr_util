@@ -1,11 +1,12 @@
 import logging
 from dataclasses import asdict
 from functools import singledispatch
+from typing import Any
 
 from omegaconf import DictConfig, OmegaConf
 
 
-def get_dict_str_list(dt, indent=2):
+def get_dict_str_list(dt: dict[str, Any], indent: int = 2) -> list[str]:
     strings = []
     for k, v in dt.items():
         ind_str = " " * indent + "- "
@@ -17,15 +18,15 @@ def get_dict_str_list(dt, indent=2):
     return strings
 
 
-def get_dict_str(dt, indent=2):
+def get_dict_str(dt: dict[str, Any], indent: int = 2) -> str:
     return "\n".join(["", *get_dict_str_list(dt, indent=indent), ""])
 
 
-def print_dict(dt, indent=2):
+def print_dict(dt: dict[str, Any], indent: int = 2) -> None:
     print(get_dict_str(dt, indent=indent))
 
 
-def print_dataclass(dc):
+def print_dataclass(dc: Any) -> None:
     print("=========== Data Class ============")
     print_dict(asdict(dc))
     print("===================================")
@@ -37,25 +38,25 @@ def print_dataclass(dc):
 
 
 @singledispatch
-def cfg_to_loggable_lines(cfg):
+def cfg_to_loggable_lines(cfg: Any) -> list[str]:
     logging.warning(f">> Unexpected cfg type: {type(cfg)}")
     return [str(cfg)]  # default, just stringify
 
 
 @cfg_to_loggable_lines.register(dict)
-def _(cfg):
+def _(cfg: dict[str, Any]) -> list[str]:
     cfg_str = str(cfg)
     return cfg_str.strip("\n").split("\n")
 
 
 @cfg_to_loggable_lines.register(DictConfig)
-def _(cfg):
+def _(cfg: DictConfig) -> list[str]:
     resolved_cfg = OmegaConf.to_container(cfg, resolve=True)
     cfg_str = OmegaConf.to_yaml(resolved_cfg)
     return cfg_str.strip("\n").split("\n")
 
 
-def get_cfg_str(cfg):
+def get_cfg_str(cfg: Any) -> str:
     return "\n".join(
         [
             "\n",
@@ -67,5 +68,5 @@ def get_cfg_str(cfg):
     )
 
 
-def log_cfg_str(cfg):
+def log_cfg_str(cfg: Any) -> None:
     logging.info(get_cfg_str(cfg))
