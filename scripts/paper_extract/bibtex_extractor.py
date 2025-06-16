@@ -15,6 +15,23 @@ from bibtexparser.bparser import BibTexParser
 from bibtexparser.customization import homogenize_latex_encoding, latex_to_unicode
 
 
+class BibtexParsingError(Exception):
+    """Exception raised when BibTeX parsing fails."""
+
+    def __init__(self, message: str = "Simple mode parsing failed") -> None:
+        super().__init__(message)
+
+
+class BibtexInputError(TypeError):
+    """Exception raised for invalid input types."""
+
+    def __init__(self, input_path: str, input_type: type) -> None:
+        super().__init__(
+            f"Input file path for gzipped file must be a string, "
+            f"but got {input_type}. Value: {input_path}"
+        )
+
+
 def preprocess_bibtex_entry(entry: dict[str, Any]) -> dict[str, Any]:
     """Apply standard customizations to a BibTeX entry.
 
@@ -82,10 +99,7 @@ def _handle_gzipped_file(input_path: str) -> str:
         TypeError: If input_path is not a string.
     """
     if not isinstance(input_path, str):
-        raise TypeError(
-            f"Input file path for gzipped file must be a string, "
-            f"but got {type(input_path)}. Value: {input_path}"
-        )
+        raise BibtexInputError(input_path, type(input_path))
 
     print(f"Input file '{input_path}' is gzipped. Decompressing temporarily...")
     temp_path = input_path.replace(".gz", "") + "_temp.bib"
@@ -127,7 +141,7 @@ def _parse_with_simple_mode(content: str) -> Any:
         print(f"CRITICAL ERROR during bibtexparser.loads() in 'simple' mode: {e_load}")
         print("This suggests a fundamental parsing issue with an entry's syntax.")
         print("Consider validating the BibTeX file or identify problematic entries.")
-        raise RuntimeError("Simple mode parsing failed") from e_load
+        raise BibtexParsingError from e_load
 
     if not bib_database or not bib_database.entries:
         return bib_database
@@ -146,7 +160,7 @@ def _parse_with_simple_mode(content: str) -> Any:
         except AttributeError as e_attr:
             _handle_entry_error(original_entry, entry_idx, e_attr, "AttributeError")
             customized_entries.append({k.lower(): v for k, v in original_entry.items()})
-        except Exception as e_custom:
+        except (KeyError, ValueError, UnicodeDecodeError) as e_custom:
             _handle_entry_error(original_entry, entry_idx, e_custom, "General error")
             customized_entries.append({k.lower(): v for k, v in original_entry.items()})
 
@@ -235,7 +249,7 @@ def _write_entries_to_jsonl(
                 if count % 1000 == 0:
                     print(f"  Processed {count} entries...")
 
-            except Exception as e:
+            except (KeyError, TypeError, ValueError, OSError) as e:
                 problematic_id = "N/A"
                 if isinstance(entry, dict):
                     problematic_id = entry.get("id", entry.get("ID", "N/A"))
