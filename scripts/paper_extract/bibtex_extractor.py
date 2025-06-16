@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any
 
 import bibtexparser
+from bibtexparser.bibdatabase import BibDatabase
 from bibtexparser.bparser import BibTexParser
 from bibtexparser.customization import homogenize_latex_encoding, latex_to_unicode
 
@@ -115,7 +116,7 @@ def _handle_gzipped_file(input_path: str) -> str:
     return temp_path
 
 
-def _parse_with_simple_mode(content: str) -> Any:
+def _parse_with_simple_mode(content: str) -> BibDatabase:
     """Parse BibTeX content using simple parser mode.
     
     Args:
@@ -168,7 +169,7 @@ def _parse_with_simple_mode(content: str) -> Any:
     return bib_database
 
 
-def _parse_with_default_mode(content: str) -> Any:
+def _parse_with_default_mode(content: str) -> BibDatabase:
     """Parse BibTeX content using default parser mode.
     
     Args:
@@ -211,7 +212,7 @@ def _write_entries_to_jsonl(
     entries: list[dict[str, Any]],
     output_path: str,
     parser_mode: str,
-    parser: Any,
+    parser: BibTexParser,
     overwrite_flag: bool
 ) -> int:
     """Write processed entries to JSONL file.

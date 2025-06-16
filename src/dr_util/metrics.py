@@ -1,6 +1,7 @@
 import logging
 from enum import Enum
 from functools import singledispatchmethod
+from typing import Any, Union
 
 import jsonlines
 from omegaconf import DictConfig, OmegaConf
@@ -17,7 +18,7 @@ class LoggerType(Enum):
     JSON = "json"
 
 
-def create_logger(cfg, logger_type):
+def create_logger(cfg: DictConfig, logger_type: str) -> Union["HydraLogger", "JsonLogger"]:
     match logger_type:
         case LoggerType.HYDRA.value:
             return HydraLogger(cfg)
@@ -27,7 +28,9 @@ def create_logger(cfg, logger_type):
 
 
 class HydraLogger:
-    def __init__(self, cfg):
+    """Logger that outputs to Hydra's logging system."""
+
+    def __init__(self, cfg: DictConfig) -> None:
         # Hydra sets up the logging cfg at start of run
         self.type = LoggerType.HYDRA
         self.cfg = cfg
@@ -65,7 +68,9 @@ class HydraLogger:
 
 
 class JsonLogger:
-    def __init__(self, cfg):
+    """Logger that outputs to JSON lines file."""
+
+    def __init__(self, cfg: DictConfig) -> None:
         self.type = LoggerType.JSON
         self.cfg = cfg
 
@@ -74,7 +79,7 @@ class JsonLogger:
         self.writer = None
         try:
             self.writer = jsonlines.open(self.path, "a")
-        except:  # noqa
+        except OSError:
             logging.warning(">> Could not open jsonlines log file")
 
         logging.info(">> Initialize JSON Logger")
@@ -110,23 +115,23 @@ class MetricType(Enum):
     BATCH_WEIGHTED_AVG_LIST = "batch_weighted_avg_list"
 
 
-def add_sum(data, key, val):
+def add_sum(data: dict[str, Any], key: str, val: Any) -> None:
     data[key] += val
 
 
-def add_list(data, key, val):
+def add_list(data: dict[str, Any], key: str, val: Any) -> None:
     data[key].append(val)
 
 
-def agg_passthrough(data, key):
+def agg_passthrough(data: dict[str, Any], key: str) -> Any:
     return data[key]
 
 
-def agg_none(data, key):  # noqa: ARG001
+def agg_none(data: dict[str, Any], key: str) -> None:  # noqa: ARG001
     return None
 
 
-def agg_batch_weighted_list_avg(data, key):
+def agg_batch_weighted_list_avg(data: dict[str, Any], key: str) -> float:
     assert BATCH_KEY in data
     weighted_sum = sum(
         [data[key][i] * data[BATCH_KEY][i] for i in range(len(data[key]))]
@@ -136,7 +141,9 @@ def agg_batch_weighted_list_avg(data, key):
 
 
 class MetricsSubgroup:
-    def __init__(self, cfg, name="", metrics=None):
+    """Handles metrics collection for a specific group (e.g., train, val)."""
+
+    def __init__(self, cfg: DictConfig, name: str = "", metrics: Any | None = None) -> None:
         self.name = name
         self.metrics = metrics
         self.data_structure = cfg.metrics.init
@@ -146,7 +153,7 @@ class MetricsSubgroup:
 
         self._init_data()
 
-    def _init_data(self):
+    def _init_data(self) -> None:
         if self.data_structure is None:
             return
 
@@ -165,29 +172,29 @@ class MetricsSubgroup:
                     self.add_fxns[key] = add_list
                     self.agg_fxns[key] = agg_batch_weighted_list_avg
 
-    def _add_tuple(self, key, val):
+    def _add_tuple(self, key: str, val: Any) -> None:
         assert key in self.data, f">> Invalid Key: {key}"
         if val is None:
             return
         self.add_fxns[key](self.data, key, val)
 
     @singledispatchmethod
-    def add(self, data, ns=1):  # noqa: ARG002 (unused args)
+    def add(self, data: Any, ns: int = 1) -> None:  # noqa: ARG002 (unused args)
         assert False, f">> Unexpected data type: {type(data)}"
 
     @add.register(tuple)
-    def _(self, data, ns=1):
+    def _(self, data: tuple, ns: int = 1) -> None:
         assert len(data) == len(("key", "val"))
         self._add_tuple(*data)
         self._add_tuple(BATCH_KEY, ns)
 
     @add.register(dict)
-    def _(self, data, ns=1):
+    def _(self, data: dict[str, Any], ns: int = 1) -> None:
         for key, val in data.items():
             self._add_tuple(key, val)
         self._add_tuple(BATCH_KEY, ns)
 
-    def agg(self):
+    def agg(self) -> dict[str, Any]:
         agg_data = {}
         for key in self.data:
             agg_val = self.agg_fxns[key](self.data, key)
@@ -197,7 +204,9 @@ class MetricsSubgroup:
 
 
 class Metrics:
-    def __init__(self, cfg):
+    """Main metrics collection and logging system."""
+
+    def __init__(self, cfg: DictConfig) -> None:
         self.cfg = cfg
         self.group_names = ["train", "val"]
 
@@ -205,21 +214,21 @@ class Metrics:
         self.groups = {name: MetricsSubgroup(cfg, name) for name in self.group_names}
         self.loggers = [create_logger(cfg, lt) for lt in cfg.metrics.loggers]
 
-    def log(self, value):
+    def log(self, value: Any) -> None:
         for logger in self.loggers:
             logger.log(value)
 
-    def train(self, data, ns=1):
+    def train(self, data: tuple | dict[str, Any], ns: int = 1) -> None:
         self.groups["train"].add(data, ns=ns)
 
-    def val(self, data, ns=1):
+    def val(self, data: tuple | dict[str, Any], ns: int = 1) -> None:
         self.groups["val"].add(data, ns=ns)
 
-    def agg(self, data_name):
+    def agg(self, data_name: str) -> dict[str, Any]:
         assert data_name in self.groups, f">> Invalid Data Name: {data_name}"
         return self.groups[data_name].agg()
 
-    def agg_log(self, data_name):
+    def agg_log(self, data_name: str) -> None:
         log_dict = {
             "title": f"agg_{data_name}",
             "data_name": data_name,

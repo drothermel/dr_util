@@ -1,9 +1,12 @@
 from dataclasses import MISSING, fields
-from typing import Any
+from typing import Any, TypeVar
+
+T = TypeVar("T")
 
 
-def lenient_validate(cls: type[Any]) -> type[Any]:
-    """A decorator that wraps a dataclass __init__ so that extra keyword arguments are ignored.
+def lenient_validate(cls: type[T]) -> type[T]:
+    """A decorator that wraps a dataclass __init__ so that extra keyword
+    arguments are ignored.
 
     Args:
         cls: The dataclass to wrap.

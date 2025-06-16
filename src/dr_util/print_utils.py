@@ -26,7 +26,7 @@ def print_dict(dt: dict[str, Any], indent: int = 2) -> None:
     print(get_dict_str(dt, indent=indent))
 
 
-def print_dataclass(dc: Any) -> None:
+def print_dataclass(dc: Any) -> None:  # dataclass instance
     print("=========== Data Class ============")
     print_dict(asdict(dc))
     print("===================================")
@@ -38,7 +38,7 @@ def print_dataclass(dc: Any) -> None:
 
 
 @singledispatch
-def cfg_to_loggable_lines(cfg: Any) -> list[str]:
+def cfg_to_loggable_lines(cfg: dict[str, Any] | DictConfig | Any) -> list[str]:
     logging.warning(f">> Unexpected cfg type: {type(cfg)}")
     return [str(cfg)]  # default, just stringify
 
@@ -56,7 +56,7 @@ def _(cfg: DictConfig) -> list[str]:
     return cfg_str.strip("\n").split("\n")
 
 
-def get_cfg_str(cfg: Any) -> str:
+def get_cfg_str(cfg: dict[str, Any] | DictConfig | Any) -> str:
     return "\n".join(
         [
             "\n",
@@ -68,5 +68,5 @@ def get_cfg_str(cfg: Any) -> str:
     )
 
 
-def log_cfg_str(cfg: Any) -> None:
+def log_cfg_str(cfg: dict[str, Any] | DictConfig | Any) -> None:
     logging.info(get_cfg_str(cfg))
