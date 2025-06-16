@@ -50,7 +50,7 @@ class RoamBackendClient:
 
     def call(self, path, method, body):
         url, method, headers = self.__make_request(path, body, method)
-        resp = requests.post(url, headers=headers, json=body, allow_redirects=False)
+        resp = requests.post(url, headers=headers, json=body, allow_redirects=False, timeout=30)
         if resp.is_redirect or resp.is_permanent_redirect:
             if "Location" in resp.headers:
                 mtch = re.search(
