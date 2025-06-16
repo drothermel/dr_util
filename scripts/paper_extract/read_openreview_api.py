@@ -5,8 +5,8 @@
 
 import argparse
 import json
-import os
 import time
+from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
 
@@ -270,7 +270,7 @@ if __name__ == "__main__":
     print(f"Limit per request: {args.limit}")
 
     file_mode = "a"
-    if os.path.exists(output_file):
+    if Path(output_file).exists():
         if args.overwrite:
             file_mode = "w"
             print(f"Output file '{output_file}' will be overwritten.")
@@ -284,7 +284,7 @@ if __name__ == "__main__":
         print(f"Creating new output file '{output_file}'.")
 
     try:
-        with open(output_file, file_mode, encoding="utf-8") as outfile:
+        with Path(output_file).open(file_mode, encoding="utf-8") as outfile:
             fetch_and_save_data(api_url, outfile, args.limit)
     except (OSError, ValueError, KeyError) as e:
         print(f"An unexpected error occurred during script execution: {e}")
