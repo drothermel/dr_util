@@ -3,6 +3,7 @@
 
 import logging
 import re
+from typing import NoReturn
 
 import requests
 from schema import And, Optional, Or, Schema
@@ -21,7 +22,7 @@ class RoamBackendClient:
         self.graph = graph
         self.__cache = {}
 
-    def _error_message(self, status_code, response_json):
+    def _error_message(self, status_code: int, response_json: str) -> NoReturn:
         if status_code == HTTP_500_ERROR:
             raise Exception("Error (HTTP 500): " + response_json)
         if status_code == HTTP_400_ERROR:
@@ -35,7 +36,7 @@ class RoamBackendClient:
             )
         raise Exception("Unknown Error: " + response_json)
 
-    def __make_request(self, path, method=None):
+    def __make_request(self, path: str, method: str | None = None) -> tuple[str, str, dict[str, str]]:
         method = "POST" if method is None else method
         base_url = self.__cache.get(self.graph, "https://api.roamresearch.com")
         return (

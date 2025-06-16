@@ -222,11 +222,10 @@ def remove_pagination_params(url_string):
     new_query_string = urlencode(query_params, doseq=True)
 
     # Reconstruct the URL
-    cleaned_url = urlunparse(
+    return urlunparse(
         (parsed_url.scheme, parsed_url.netloc, parsed_url.path,
          parsed_url.params, new_query_string, parsed_url.fragment)
     )
-    return cleaned_url
 
 
 if __name__ == "__main__":
