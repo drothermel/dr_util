@@ -118,13 +118,13 @@ def _handle_gzipped_file(input_path: str) -> str:
 
 def _parse_with_simple_mode(content: str) -> BibDatabase:
     """Parse BibTeX content using simple parser mode.
-    
+
     Args:
         content: The BibTeX file content as string.
-        
+
     Returns:
         Parsed BibTeX database object.
-        
+
     Raises:
         RuntimeError: If parsing fails even in simple mode.
     """
@@ -171,10 +171,10 @@ def _parse_with_simple_mode(content: str) -> BibDatabase:
 
 def _parse_with_default_mode(content: str) -> BibDatabase:
     """Parse BibTeX content using default parser mode.
-    
+
     Args:
         content: The BibTeX file content as string.
-        
+
     Returns:
         Parsed BibTeX database object.
     """
@@ -193,7 +193,7 @@ def _handle_entry_error(
     error_type: str
 ) -> None:
     """Handle errors that occur during entry processing.
-    
+
     Args:
         original_entry: The problematic entry.
         entry_idx: Index of the entry.
@@ -216,14 +216,14 @@ def _write_entries_to_jsonl(
     overwrite_flag: bool
 ) -> int:
     """Write processed entries to JSONL file.
-    
+
     Args:
         entries: List of processed BibTeX entries.
         output_path: Path to output JSONL file.
         parser_mode: The parser mode used.
         parser: The parser object.
         overwrite_flag: Whether to overwrite existing file.
-        
+
     Returns:
         Number of successfully written entries.
     """
@@ -268,14 +268,14 @@ def process_bibtex_file(
     overwrite_flag: bool
 ) -> int:
     """Read a BibTeX file, process entries, and write to JSONL.
-    
+
     Args:
         input_bib_path: Path to input BibTeX file.
         output_jsonl_path: Path to output JSONL file.
         is_gzipped: Whether input file is gzipped.
         parser_mode: Parser mode ('simple' or 'default').
         overwrite_flag: Whether to overwrite existing output file.
-        
+
     Returns:
         Number of successfully processed entries.
     """
@@ -301,7 +301,9 @@ def process_bibtex_file(
             bib_database = _parse_with_default_mode(bib_content_str)
 
         if not bib_database or not bib_database.entries:
-            print("No entries found in the BibTeX file after parsing and customization.")
+            print(
+                "No entries found in the BibTeX file after parsing and customization."
+            )
             return 0
 
         print(f"Found {len(bib_database.entries)} entries. "
@@ -317,16 +319,17 @@ def process_bibtex_file(
             overwrite_flag
         )
 
-        print(f"\nSuccessfully processed and wrote {count} entries to {output_jsonl_path}.")
-        return count
-
+        print(
+f"\nSuccessfully processed and wrote {count} entries to "
+            f"{output_jsonl_path}."
+        )
     except FileNotFoundError:
         print(f"Error: Input file '{input_bib_path}' not found.")
         return 0
     except TypeError as e:
         print(f"Configuration or Type Error: {e}")
         return 0
-    except Exception as e:
+    except (OSError, MemoryError) as e:
         print(f"An unexpected error occurred: {e}")
         return 0
     finally:
@@ -337,13 +340,18 @@ def process_bibtex_file(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Parse a BibTeX file (gzipped or plain) and output entries to a JSONL file.",
+        description=(
+            "Parse a BibTeX file (gzipped or plain) and output entries to a JSONL file."
+        ),
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument(
         "--overwrite",
         action="store_true",
-        help="Overwrite the output file if it exists, otherwise append (or create if new)."
+        help=(
+"Overwrite the output file if it exists, otherwise append "
+            "(or create if new)."
+        )
     )
 
     args = parser.parse_args()
@@ -355,17 +363,21 @@ if __name__ == "__main__":
     print(f"Input BibTeX File: {input_file}")
     print(f"Output JSONL File: {output_file}")
 
-    # is_gzipped_input = input_file.endswith('.gz')
     is_gzipped_input = False
 
     if not args.overwrite and Path(output_file).exists():
-        print(f"Output file '{output_file}' already exists. Appending. Use --overwrite to overwrite.")
+        print(
+            f"Output file '{output_file}' already exists. "
+            "Appending. Use --overwrite to overwrite."
+        )
     elif args.overwrite and Path(output_file).exists():
         print(f"Output file '{output_file}' will be overwritten.")
     else:
         print(f"Creating new output file '{output_file}'.")
 
-    process_bibtex_file(input_file, output_file, is_gzipped_input, "simple", False)
+    process_bibtex_file(
+        input_file, output_file, is_gzipped_input, "simple", overwrite_flag=False
+    )
 
     print("----------------------")
     print("Script finished.")
